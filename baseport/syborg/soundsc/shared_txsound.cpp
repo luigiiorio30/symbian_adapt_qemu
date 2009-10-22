@@ -248,7 +248,7 @@ void DDriverSyborgSoundScPdd::Callback(TUint aTransferID, TInt aTransferResult, 
 	
 	}
 
-TDfcQue*DDriverSyborgSoundScPdd::DfcQ()
+TDfcQue*DDriverSyborgSoundScPdd::DfcQ(TInt /* aUnit*/ )
 	{
 	return iPhysicalDevice->iDfcQ;
 	}

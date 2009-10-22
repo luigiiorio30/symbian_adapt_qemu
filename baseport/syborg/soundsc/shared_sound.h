@@ -51,7 +51,7 @@ public:
 	void Callback(TUint aTransferID, TInt aTransferResult, TInt aBytesTransferred);
 
 	void SetCaps();
-	TDfcQue* DfcQ();
+	TDfcQue* DfcQ(TInt aUnit);
 	
 	TInt CalculateBufferTime(TInt aNumBytes);
 
