@@ -184,7 +184,7 @@ void TPointerRv::Process(TPointerRv *i, struct TPointerRv::PData *pd)
  fin:
 
 
-//  i->DisplayPointer();
+  i->DisplayPointer();
 
 
   Kern::AddEvent(e);
