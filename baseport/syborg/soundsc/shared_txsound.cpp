@@ -273,9 +273,9 @@ void DDriverSyborgSoundScPdd::SetCaps()
 		// The data transfer direction for this unit is play
 		iCaps.iDirection = ESoundDirPlayback;
 		}
-	else if(iUnitType == KSoundScTxUnit0)
+	else if(iUnitType == KSoundScRxUnit0)
 		{
-		// The data transfer direction for this unit is play
+		// The data transfer direction for this unit is record 
 		iCaps.iDirection = ESoundDirRecord;
 		}
 	
