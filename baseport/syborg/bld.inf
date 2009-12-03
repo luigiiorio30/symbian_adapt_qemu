@@ -95,5 +95,4 @@ PRJ_EXTENSIONS
 start	extension	base/rom
 option	REE_TARGET	syborg
 option	TYPE	tshell
-option	REE_PATH	sf/adaptation/qemu
 end
