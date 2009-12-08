@@ -249,10 +249,14 @@ void DDriverSyborgSoundScPdd::Callback(TUint aTransferID, TInt aTransferResult, 
 	}
 
 TDfcQue*DDriverSyborgSoundScPdd::DfcQ(TInt /* aUnit*/ )
-	{
-	return iPhysicalDevice->iDfcQ;
-	}
+        {
+        return this->DfcQ();
+        }
 
+TDfcQue*DDriverSyborgSoundScPdd::DfcQ()
+        {
+        return iPhysicalDevice->iDfcQ;
+        }
 
 TInt DDriverSyborgSoundScPdd::MaxTransferLen() const
 	{
