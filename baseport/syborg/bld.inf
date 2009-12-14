@@ -105,3 +105,10 @@ option		E32PATH			$(EXTENSION_ROOT)/../../../../os/kernelhwsrv/kernel
 option		EXTRA_INC_PATH	$(EXTENSION_ROOT)/bootstrap
 option		EXTRA_SRC_PATH	$(EXTENSION_ROOT)/bootstrap 
 end
+
+// Build image armv5 for urel and udeb
+PRJ_EXTENSIONS
+start	extension	base/rom
+option	REE_TARGET	syborg
+option	TYPE	tshell
+end
