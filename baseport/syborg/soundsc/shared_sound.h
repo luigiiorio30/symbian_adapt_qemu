@@ -51,6 +51,11 @@ public:
 	void Callback(TUint aTransferID, TInt aTransferResult, TInt aBytesTransferred);
 
 	void SetCaps();
+        // There was a change in the signature for DfcQ() which
+        // is a pure virtual method in the parent.
+        //  for Symbian^2
+        TDfcQue* DfcQ();
+        //  for Symbian^3
 	TDfcQue* DfcQ(TInt aUnit);
 	
 	TInt CalculateBufferTime(TInt aNumBytes);
