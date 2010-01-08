@@ -26,6 +26,7 @@ rom/header.iby					/epoc32/rom/syborg/		//
 rom/kernel.iby					/epoc32/rom/syborg/		//
 specific/syborg.cfg				/epoc32/rom/syborg/		//
 estart.txt						/epoc32/rom/syborg/		//
+syborg.dtb						/epoc32/rom/syborg/		//
 trk_l1.ini						/epoc32/data/Z/trk/trk_syborg.ini
 
 specific/variantmediadef.h /epoc32/include/syborg/variantmediadef.h
