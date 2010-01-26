@@ -4666,14 +4666,12 @@ int main(int argc, char **argv, char **envp)
     cyls = heads = secs = 0;
     translation = BIOS_ATA_TRANSLATION_AUTO;
     monitor_device = "vc";
-
-    serial_devices[0] = "vc:80Cx24C";
-    for(i = 1; i < MAX_SERIAL_PORTS; i++)
+    
+    for(i = 0; i < MAX_SERIAL_PORTS; i++)
         serial_devices[i] = NULL;
     serial_device_index = 0;
-
-    parallel_devices[0] = "vc:640x480";
-    for(i = 1; i < MAX_PARALLEL_PORTS; i++)
+    
+    for(i = 0; i < MAX_PARALLEL_PORTS; i++)
         parallel_devices[i] = NULL;
     parallel_device_index = 0;
 
