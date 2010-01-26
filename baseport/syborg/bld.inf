@@ -32,6 +32,11 @@ specific/variantmediadef.h /epoc32/include/syborg/variantmediadef.h
 
 PRJ_EXTENSIONS
 start		extension		base/genexec
+#ifdef SYMBIAN_OLD_EXPORT_LOCATION
+option INC_PATH   /epoc32/include
+#else
+option INC_PATH  /epoc32/include/platform
+#endif
 option		EXTRA_SRC_PATH  $(EXTENSION_ROOT)/../../../../os/kernelhwsrv/kernel/eka/kernel
 end
 
@@ -95,6 +100,11 @@ hal/hal
 
 PRJ_EXTENSIONS
 start		extension		base/bootstrap
+#ifdef SYMBIAN_OLD_EXPORT_LOCATION
+option INC_PATH   /epoc32/include
+#else
+option INC_PATH  /epoc32/include/platform
+#endif
 option		NAME			_syborg_bootloader_bootrom
 option		MEMMODEL		multiple
 //option		MEMMODEL		flexible
@@ -104,4 +114,11 @@ option		INCLUDES		config.inc syborg.inc
 option		E32PATH			$(EXTENSION_ROOT)/../../../../os/kernelhwsrv/kernel
 option		EXTRA_INC_PATH	$(EXTENSION_ROOT)/bootstrap
 option		EXTRA_SRC_PATH	$(EXTENSION_ROOT)/bootstrap 
+end
+
+// Build image armv5 for urel and udeb
+PRJ_EXTENSIONS
+start	extension	base/rom
+option	REE_TARGET	syborg
+option	TYPE	tshell
 end

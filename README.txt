@@ -1,5 +1,8 @@
 This is repo contains the following; 
 
+applications/
+	Sample application 
+
 baseport/
 	The baseport (BSP) needed to run Symbian OS in QEMU
 
@@ -11,6 +14,13 @@ symbian-qemu-0.9.1-12/
 	A version of QEMU with some extra features not yet available in the QEMU mainline.
 	A corresponding set of Windows/Linux binaries is available from the Symbian Foundation wiki
         http://developer.symbian.org/wiki/index.php/SYBORG/QEMU
+
+tools/e32test-driver/
+	A simple python script to run the E32test-suite and collect/summarize the results.
+
+tools/elf4rom/
+	The ELF4ROM command line tool and libraries. This tool is used to convert Symbian ROM images
+	into debuggable elf files. See docs/wiki/ELF4ROM.doc for more information.
 
 Some notes;
 
