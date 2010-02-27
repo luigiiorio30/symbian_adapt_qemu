@@ -1,4 +1,6 @@
 import qemu
+import os
+import sys
 
 class syborg_serial(qemu.devclass):
   REG_ID           = 0
@@ -127,6 +129,57 @@ class syborg_serial(qemu.devclass):
   regions = [qemu.ioregion(0x1000, readl=read_reg, writel=write_reg)]
   irqs = 1
   name = "syborg,serial"
-  properties = {"fifo-size":16, "chardev":None}
+  properties = {"fifo-size":16, "chardev":None, "target": ""}
 
 qemu.register_device(syborg_serial)
+
+class syborg_modem(syborg_serial):
+  
+  def create(self):
+    syborg_serial.create(self)
+    
+    # Find the path of the emulator executable
+    path = os.path.dirname(sys.executable)
+    executable = os.getenv("SVP_MODEM_EXECUTABLE")
+    if None == executable:
+      executable = self.modem_executable
+    
+    executable_name = executable
+    fq_executable = os.path.join(path, executable_name)
+    print(fq_executable)
+    
+    if not os.path.exists(fq_executable):
+      executable_name = executable + ".exe"
+      fq_executable = os.path.join(path, executable_name)
+      
+      if not os.path.exists(fq_executable):
+        sys.exit("Could not locate modem executable '" + executable + "' in '" + path + "'!\n")
+    
+    # Attempt to find the correct port from the target spec
+    target = self.properties["target"]
+    
+    if not(target.startswith("tcp:") or target.startswith("udp:")):
+      sys.exit("Modem device is not accessed via an acceptable socket.")
+    
+    target = target[4:]
+    port_start_idx = target.find(":");
+    port_end_idx = target.find(",")
+    if -1 == port_start_idx:
+      sys.exit("Could not extract port number from modem target spec!")
+    
+    port = ""
+    if -1 == port_end_idx:
+      port = target[port_start_idx + 1:]
+    else:
+      port = target[port_start_idx + 1:port_end_idx]
+    
+    os.spawnl(os.P_NOWAIT, fq_executable, executable_name, "-p", port)
+    self.chardev.handle_connect()
+  
+  # Name property override.
+  name = "syborg,serial,modem"
+  
+  # Default modem executable
+  modem_executable = "phonesim"
+
+qemu.register_device(syborg_modem)

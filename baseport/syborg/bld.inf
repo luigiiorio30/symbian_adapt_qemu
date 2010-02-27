@@ -85,6 +85,8 @@ svphostfs/svphostfsy
 svpsnapdriver/svpsnapdriver
 svpsnapdriver/snapapp
 
+//NGA framebuffer
+svpframebuffer/svpframebuffer
 
 //Add Sound Driver
 soundsc\soundsc
