@@ -1,6 +1,4 @@
 /*
-* Copyright (c) 2009 Nokia Corporation and/or its subsidiary(-ies).
-* All rights reserved.
 * This component and the accompanying materials are made available
 * under the terms of the License "Eclipse Public License v1.0"
 * which accompanies this distribution, and is available
@@ -10,12 +8,13 @@
 * Nokia Corporation - initial contribution.
 *
 * Contributors:
+* Accenture Ltd
 *
-* Description:
+* Description: This file is a part of sound driver for Syborg adaptation.
 *
 */
 
-#include		<variant.mmh>
+#include		"../variant.mmh"
 #include		"kernel/kern_ext.mmh"
 
 SYSTEMINCLUDE		/epoc32/include/drivers
@@ -25,8 +24,17 @@ TARGET			VariantTarget(soundsc,pdd)
 TARGETTYPE		pdd
 ROMTARGET		soundsc.pdd
 
+SYSTEMINCLUDE .
+
 SOURCE			shared_txsound.cpp
 SOURCE			variant_sound.cpp
+SOURCE			virtio.cpp
+SOURCE			virtio_io.cpp
+SOURCE			virtio_iohandler.cpp
+SOURCE			virtio_queue.cpp
+SOURCE			virtio_audio.cpp
+
+LIBRARY	    PlatformLib 
 
 CAPABILITY		all
 EPOCALLOWDLLDATA

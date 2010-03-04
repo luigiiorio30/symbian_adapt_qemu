@@ -1,6 +1,4 @@
 /*
-* Copyright (c) 2009 Nokia Corporation and/or its subsidiary(-ies).
-* All rights reserved.
 * This component and the accompanying materials are made available
 * under the terms of the License "Eclipse Public License v1.0"
 * which accompanies this distribution, and is available
@@ -10,8 +8,9 @@
 * Nokia Corporation - initial contribution.
 *
 * Contributors:
+* Accenture Ltd
 *
-* Description:
+* Description: This file is a part of sound driver for Syborg adaptation.
 *
 */
 
@@ -20,21 +19,28 @@
 
 #include "shared_sound.h"
 
+static const TUint KAudioDfcQueuePriority = 28;
+
 class DDriverSyborgSoundScPddFactory : public DPhysicalDevice
 	{
 public:
 
 	DDriverSyborgSoundScPddFactory();
+	~DDriverSyborgSoundScPddFactory();
 	TInt Install();
 	void GetCaps(TDes8 &aDes) const;
 	TInt Create(DBase*& aChannel, TInt aUnit, const TDesC8* anInfo, const TVersion &aVer);
 	TInt Validate(TInt aUnit, const TDesC8* anInfo, const TVersion &aVer);
+	
+	VirtIo::MIoHandler* IoHandler();
 
 public:
 
 	/** The DFC queue to be used by both the LDD and the PDD to serialise access to the PDD */
-	TDfcQue*		iDfcQ;
-
+	TDynamicDfcQue*		iDfcQ;
+	
+	VirtIo::DIoHandler *iIoHandler;
+	
 	};
 
 #endif 
