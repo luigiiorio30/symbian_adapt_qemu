@@ -11,6 +11,8 @@
 *
 * Contributors:
 *
+* Accenture Ltd - Syborg framebuffer improvements, now auto determines frame size from board model, performance and memory improvements
+*
 * Description: Minimalistic frame buffer driver
 *
 */
@@ -107,6 +109,7 @@ void DLcdPowerHandler::PowerUpDfc()
 void DLcdPowerHandler::PowerDownDfc()
 {
   DisplayOff();
+
   PowerDownDone();
 }
 
@@ -122,10 +125,10 @@ void DLcdPowerHandler::PowerUp()
 
 void DLcdPowerHandler::PowerUpLcd(TBool aSecure)
 {
-#if 1
+
   WriteReg(iPortAddr, FB_ENABLED, 0);
   WriteReg(iPortAddr, FB_BASE, aSecure ? iSecurevRamPhys : ivRamPhys);
-  WriteReg(iPortAddr, FB_WIDTH, iVideoInfo.iSizeInPixels.iWidth);
+
   WriteReg(iPortAddr, FB_BLANK, 0);
   WriteReg(iPortAddr, FB_BPP, 32);
   WriteReg(iPortAddr, FB_COLOR_ORDER, 0);
@@ -133,8 +136,9 @@ void DLcdPowerHandler::PowerUpLcd(TBool aSecure)
   WriteReg(iPortAddr, FB_PIXEL_ORDER, 0);
   WriteReg(iPortAddr, FB_INT_MASK, 0);
   WriteReg(iPortAddr, FB_ENABLED, 1);
-  WriteReg(iPortAddr, FB_HEIGHT, iVideoInfo.iSizeInPixels.iHeight);
-#endif
+
+// We don't write the Height and Width of the framebuffer, this is controlled by the board model
+
 }
 
 void DLcdPowerHandler::PowerDownLcd()
@@ -207,7 +211,7 @@ TInt DLcdPowerHandler::GetSpecifiedDisplayModeInfo(TInt aMode, TVideoInfoV01& aI
 	{
 	  aInfo.iOffsetToFirstPixel = KCOnfigOffsetToFirstPixel;
 	  aInfo.iIsPalettized       = KConfigIsPalettized;
-	  aInfo.iOffsetBetweenLines = KCOnfigOffsetBetweenLines;
+	  aInfo.iOffsetBetweenLines = iVideoInfo.iSizeInPixels.iWidth*4; //Offset depends on width of framebuffer
 	  aInfo.iBitsPerPixel       = KConfigBitsPerPixel;
 	}
   return KErrNone;
@@ -216,10 +220,15 @@ TInt DLcdPowerHandler::GetSpecifiedDisplayModeInfo(TInt aMode, TVideoInfoV01& aI
 TInt DLcdPowerHandler::AllocateFrameBuffer()
 {
 	// Allocate physical RAM for video
-	TInt vSize = TSyborg::VideoRamSize();
+	
+	//read width and height of display from board model and allocate size
+	TInt width = ReadReg(iPortAddr, FB_WIDTH);
+	TInt height = ReadReg(iPortAddr, FB_HEIGHT);
+	
+	iSize = 4*width*height; //*4 as 32bits per pixel
 
 	NKern::ThreadEnterCS();
-	TInt r = Epoc::AllocPhysicalRam(vSize,Syborg::VideoRamPhys);
+	TInt r = Epoc::AllocPhysicalRam(iSize,Syborg::VideoRamPhys);
 	if (r != KErrNone)
 	{
 	        NKern::ThreadLeaveCS();
@@ -229,7 +238,7 @@ TInt DLcdPowerHandler::AllocateFrameBuffer()
 	// Map the video RAM
 	ivRamPhys = TSyborg::VideoRamPhys();
 
-	r = DPlatChunkHw::New(iChunk,ivRamPhys,vSize,EMapAttrUserRw|EMapAttrBufferedC);
+	r = DPlatChunkHw::New(iChunk,ivRamPhys,iSize,EMapAttrUserRw|EMapAttrBufferedC);
 
 	NKern::ThreadLeaveCS();
 
@@ -240,14 +249,14 @@ TInt DLcdPowerHandler::AllocateFrameBuffer()
 
 	// Allocate physical RAM for secure display
 	NKern::ThreadEnterCS();
-	r = Epoc::AllocPhysicalRam(vSize,Syborg::VideoRamPhysSecure);
+	r = Epoc::AllocPhysicalRam(iSize,Syborg::VideoRamPhysSecure);
 	if (r != KErrNone)
 	{
 	        NKern::ThreadLeaveCS();
 		Kern::Fault("AllocVideoRam 2",r);
 	}
-	iSecurevRamPhys = ivRamPhys + vSize;
-	TInt r2 = DPlatChunkHw::New(iSecureChunk,iSecurevRamPhys,vSize,EMapAttrUserRw|EMapAttrBufferedC);
+	iSecurevRamPhys = ivRamPhys + iSize;
+	TInt r2 = DPlatChunkHw::New(iSecureChunk,iSecurevRamPhys,iSize,EMapAttrUserRw|EMapAttrBufferedC);
 
 	NKern::ThreadLeaveCS();
 
@@ -256,11 +265,16 @@ TInt DLcdPowerHandler::AllocateFrameBuffer()
 
 	TUint* pV2 = (TUint*)iSecureChunk->LinearAddress();
 
-	iVideoInfo.iSizeInPixels.iWidth  = KConfigLcdWidth;
-	iVideoInfo.iSizeInPixels.iHeight = KConfigLcdHeight;
+	//width and height set by reading board model
+	iVideoInfo.iSizeInPixels.iWidth  = width;
+	iVideoInfo.iSizeInPixels.iHeight = height;
+
+	//offset between lines depends on width of screen
+	iVideoInfo.iOffsetBetweenLines = width*4;
+
 	iVideoInfo.iDisplayMode = KConfigLcdDisplayMode;
-	iVideoInfo.iOffsetToFirstPixel = KCOnfigOffsetToFirstPixel;
-	iVideoInfo.iOffsetBetweenLines = KCOnfigOffsetBetweenLines;
+	iVideoInfo.iOffsetToFirstPixel = KConfigOffsetToFirstPixel;
+	
 	iVideoInfo.iIsPalettized = KConfigIsPalettized;
 	iVideoInfo.iBitsPerPixel = KConfigBitsPerPixel;
 	iVideoInfo.iSizeInTwips.iWidth = KConfigLcdWidthInTwips;
@@ -273,9 +287,7 @@ TInt DLcdPowerHandler::AllocateFrameBuffer()
 	iSecureVideoInfo = iVideoInfo;
 	iSecureVideoInfo.iVideoAddress = (TInt)pV2;
 
-	// Alloc Physical RAM for the Composition Buffers used by the GCE
-	iSize = 4*480*640;//FRAME_BUFFER_SIZE( iVideoInfo.iBitsPerPixel, iVideoInfo.iSizeInPixels.iWidth, iVideoInfo.iSizeInPixels.iHeight);
-	__GCE_DEBUG_PRINT2("DLcdPowerHandler.iSize  = %d\n", iSize );
+	// Alloc Physical RAM for the Composition Buffers used by OpenWF
 	// double and round the page size
 	TUint round = 2*Kern::RoundToPageSize(iSize);
 
@@ -433,23 +445,6 @@ TInt DLcdPowerHandler::Create()
 	pLcd			= this;
 
 	iPortAddr = KHwBaseClcd;
-
-	iVideoInfo.iSizeInPixels.iWidth  = KConfigLcdWidth;
-	iVideoInfo.iSizeInPixels.iHeight = KConfigLcdHeight;
-	iVideoInfo.iDisplayMode = KConfigLcdDisplayMode;
-	iVideoInfo.iOffsetToFirstPixel = KCOnfigOffsetToFirstPixel;
-	iVideoInfo.iOffsetBetweenLines = KCOnfigOffsetBetweenLines;
-	iVideoInfo.iIsPalettized = KConfigIsPalettized;
-	iVideoInfo.iBitsPerPixel = KConfigBitsPerPixel;
-	iVideoInfo.iSizeInTwips.iWidth = KConfigLcdWidthInTwips;
-	iVideoInfo.iSizeInTwips.iHeight = KConfigLcdHeightInTwips;
-	iVideoInfo.iIsMono = KConfigIsMono;
-	// !@!	iVideoInfo.iVideoAddress = (TInt)pV;
-	iVideoInfo.iIsPixelOrderLandscape = KConfigPixelOrderLandscape;
-	iVideoInfo.iIsPixelOrderRGB = KConfigPixelOrderRGB;
-
-	iSecureVideoInfo = iVideoInfo;
-	// !@! iSecureVideoInfo.iVideoAddress = (TInt)pV2;
 
 	TInt r = AllocateFrameBuffer();
 	if(r == KErrNone)
@@ -617,7 +612,7 @@ TInt DDisplayPddSyborg::SetGceMode()
 	@param	aDegOfRot  The requested rotation
 	@return KErrNone
 */
-TInt DDisplayPddSyborg::SetRotation(TInt aDegOfRot)
+TInt DDisplayPddSyborg::SetRotation(RDisplayChannel::TDisplayRotation aDegOfRot)
 	{
 	return KErrNone;
 	}
@@ -913,12 +908,16 @@ void DDisplayPddSyborg::VSyncDfcFn(TAny* aChannel)
 			//If no buffer was available during a call to GetCompositionBuffer the active buffer has
 			//been returned as the next available one, so we must set the buffer to the proper state before we
 			//send the notification.
-			if(channel->iLdd->iPendingReq[RDisplayChannel::EReqGetCompositionBuffer].iStatus)
+			TInt pendingIndex = channel->iLdd->iPendingIndex[RDisplayChannel::EReqGetCompositionBuffer];
+			if(channel->iLdd->iPendingReq[RDisplayChannel::EReqGetCompositionBuffer][pendingIndex].iTClientReq)
+			{
+				if(channel->iLdd->iPendingReq[RDisplayChannel::EReqGetCompositionBuffer][pendingIndex].iTClientReq->IsReady())
 				{
-				channel->iActiveBuffer->iState	= EBufferCompose;
-				channel->RequestComplete(RDisplayChannel::EReqGetCompositionBuffer, KErrNone);
-
+				channel->iActiveBuffer->iState = EBufferCompose;
+				channel->RequestComplete(RDisplayChannel::EReqGetCompositionBuffer,KErrNone);
 				}
+
+			}
 
 			channel->iActiveBuffer				= NULL;
 			}
@@ -1029,7 +1028,12 @@ DECLARE_STANDARD_EXTENSION()
 	r = pH->Create();
 	if ( r == KErrNone)
 		{
-		pH->iDfcQ = Kern::DfcQue0();	// use low priority DFC queue for this driver 
+		TInt r = Kern::DfcQCreate(pH->iDfcQ, 29 , &KLitLcd);
+
+		if(r!=KErrNone)
+		{
+			return r;
+		}
 
 		DDisplayPddFactory * device = new DDisplayPddFactory;
 

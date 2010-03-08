@@ -55,9 +55,6 @@ kasyborg						// Variant library
 serial/serial					// Serial / UART ports
 fb/fb							// Framebuffer
 
-fb/fb_landscape
-fb/fb_portrait
-fb/fb_portrait_wvga
 
 keyboard/keyboard				// Keyboard
 pointer/pointer					// Pointer

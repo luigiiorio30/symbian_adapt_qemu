@@ -11,6 +11,8 @@
 *
 * Contributors:
 *
+* Accenture Ltd - Syborg framebuffer improvements, now auto determines frame size from board model, performance and memory improvements
+*
 * Description: Minimalistic frame buffer driver
 *
 */
@@ -43,22 +45,24 @@
 
 _LIT(KLitLcd,"SYBORG_FB");
 
-const TUint KConfigLcdWidth            = 640;
-const TUint	KConfigLcdHeight	       = 480;
-const TInt	KConfigLcdWidthInTwips     = 9638;
-const TInt	KConfigLcdHeightInTwips    = 7370;
+
+const TInt	KConfigLcdWidthInTwips     = 1996;
+const TInt	KConfigLcdHeightInTwips    = 3550;
+
 const TBool KConfigIsMono              = 0;
 const TBool KConfigIsPalettized        = 0;
 const TInt  KCOnfigOffsetToFirstPixel  = 0;
 const TBool KConfigPixelOrderRGB       = 0;
 const TBool KConfigPixelOrderLandscape = 1;
 const TInt  KConfigLcdDisplayMode       = 2;
-//const TInt  KConfigLcdDisplayMode       = 1;
+
+const TInt KConfigOffsetToFirstPixel =0;
+
 const TInt  KConfigLcdNumberOfDisplayModes = 3;
 
 
-const TInt  KConfigBitsPerPixel        = 24;
-const TInt  KCOnfigOffsetBetweenLines  = 2560;
+const TInt  KConfigBitsPerPixel        = 32;
+
 
 const TInt   KVSyncDfcPriority							= 7 ;   //priority of DFC within the queue (0 to 7, where 7 is highest)
 
@@ -202,7 +206,7 @@ class DDisplayPddSyborg : public DDisplayPdd
      
      @return KErrNone if successful; or one of the other system wide error codes.
      */       
-    virtual TInt  SetRotation(TInt aRotation);
+	virtual TInt  SetRotation(RDisplayChannel::TDisplayRotation aRotation);
 
      /**
      Called by the LDD to handle the device specific part of posting a User Buffer.
