@@ -22,6 +22,7 @@
 
 TARGET			VariantTarget(exmondebug,dll)
 
+SYMBIAN_BASE_SYSTEMINCLUDE(drivers)
 SYSTEMINCLUDE	/epoc32/include/drivers
 SYSTEMINCLUDE   ../serial
 

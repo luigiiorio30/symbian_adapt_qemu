@@ -22,6 +22,7 @@ TARGET			VariantTarget(ethernet,pdd)
 TARGETTYPE		pdd
 ROMTARGET       ethernet.pdd
 
+SYMBIAN_BASE_SYSTEMINCLUDE(drivers)
 SYSTEMINCLUDE	/epoc32/include/drivers
 SYSTEMINCLUDE	AsspNKernIncludePath
 SOURCEPATH	    .

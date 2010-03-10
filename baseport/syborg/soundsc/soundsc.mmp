@@ -17,6 +17,7 @@
 #include		"../variant.mmh"
 #include		"kernel/kern_ext.mmh"
 
+SYMBIAN_BASE_SYSTEMINCLUDE(drivers)
 SYSTEMINCLUDE		/epoc32/include/drivers
 
 

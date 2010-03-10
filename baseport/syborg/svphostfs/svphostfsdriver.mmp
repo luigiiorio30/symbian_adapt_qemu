@@ -24,6 +24,7 @@ systeminclude		AsspNKernIncludePath
 systeminclude		inc
 systeminclude		../svpplatform/libfdt
 systeminclude 		/epoc32/include/stdapis
+OS_LAYER_LIBC_SYSTEMINCLUDE
 
 target			VariantTarget(svphostfsdriver,ldd)
 linkas			svphostfsdriver.ldd

@@ -21,6 +21,7 @@
 TARGET			VariantTarget(eserial,pdd)
 TARGETTYPE		pdd
 
+SYMBIAN_BASE_SYSTEMINCLUDE(drivers)
 SYSTEMINCLUDE	/epoc32/include/drivers
 SYSTEMINCLUDE	AsspNKernIncludePath
 
