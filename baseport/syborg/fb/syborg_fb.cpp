@@ -11,6 +11,8 @@
 *
 * Contributors:
 *
+* Accenture Ltd - Syborg framebuffer improvements, now auto determines frame size from board model, performance and memory improvements
+*
 * Description: Minimalistic frame buffer driver
 *
 */
@@ -114,10 +116,10 @@ void DLcdPowerHandler::PowerUp()
 
 void DLcdPowerHandler::PowerUpLcd(TBool aSecure)
 {
-#if 1
+
   WriteReg(iPortAddr, FB_ENABLED, 0);
   WriteReg(iPortAddr, FB_BASE, aSecure ? iSecurevRamPhys : ivRamPhys);
-  WriteReg(iPortAddr, FB_WIDTH, iVideoInfo.iSizeInPixels.iWidth);
+
   WriteReg(iPortAddr, FB_BLANK, 0);
   WriteReg(iPortAddr, FB_BPP, 32);
   WriteReg(iPortAddr, FB_COLOR_ORDER, 0);
@@ -125,8 +127,9 @@ void DLcdPowerHandler::PowerUpLcd(TBool aSecure)
   WriteReg(iPortAddr, FB_PIXEL_ORDER, 0);
   WriteReg(iPortAddr, FB_INT_MASK, 0);
   WriteReg(iPortAddr, FB_ENABLED, 1);
-  WriteReg(iPortAddr, FB_HEIGHT, iVideoInfo.iSizeInPixels.iHeight);
-#endif
+
+  // We don't write the Height and Width of the framebuffer, this is controlled by the board model
+
 }
 
 void DLcdPowerHandler::PowerDownLcd()
@@ -202,7 +205,7 @@ TInt DLcdPowerHandler::GetSpecifiedDisplayModeInfo(TInt aMode, TVideoInfoV01& aI
 
 	  aInfo.iIsPalettized       = KConfigIsPalettized;
 
-	  aInfo.iOffsetBetweenLines = KConfigOffsetBetweenLines;
+	  aInfo.iOffsetBetweenLines = iVideoInfo.iSizeInPixels.iWidth*4; //Offset depends on width of framebuffer
 
 	  aInfo.iBitsPerPixel       = KConfigBitsPerPixel;
 	}
@@ -211,11 +214,13 @@ TInt DLcdPowerHandler::GetSpecifiedDisplayModeInfo(TInt aMode, TVideoInfoV01& aI
 
 TInt DLcdPowerHandler::AllocateFrameBuffer()
 {
-	// Allocate physical RAM for video
-
-// Added only the comments
-	TInt vSize = TSyborg::VideoRamSize(); // Maximum display now 854 x 854
-
+// Allocate physical RAM for video
+	
+	//read width and height of display from board model and allocate size
+	TInt width = ReadReg(iPortAddr, FB_WIDTH);
+	TInt height = ReadReg(iPortAddr, FB_HEIGHT);
+	
+	TInt vSize = 4*width*height; //*4 as 32bits per pixel
 
 	NKern::ThreadEnterCS();
 	TInt r = Epoc::AllocPhysicalRam(vSize,Syborg::VideoRamPhys);
@@ -255,13 +260,16 @@ TInt DLcdPowerHandler::AllocateFrameBuffer()
 
 	TUint* pV2 = (TUint*)iSecureChunk->LinearAddress();
 
-	iVideoInfo.iSizeInPixels.iWidth  = KConfigLcdWidth;
-	iVideoInfo.iSizeInPixels.iHeight = KConfigLcdHeight;
+	//width and height set by reading board model
+	iVideoInfo.iSizeInPixels.iWidth  = width;
+	iVideoInfo.iSizeInPixels.iHeight = height;
+
+	//offset between lines depends on width of screen
+	iVideoInfo.iOffsetBetweenLines = width*4;
+
 	iVideoInfo.iDisplayMode = KConfigLcdDisplayMode;
-
 	iVideoInfo.iOffsetToFirstPixel = KConfigOffsetToFirstPixel;
-	iVideoInfo.iOffsetBetweenLines = KConfigOffsetBetweenLines;
-
+	
 	iVideoInfo.iIsPalettized = KConfigIsPalettized;
 	iVideoInfo.iBitsPerPixel = KConfigBitsPerPixel;
 	iVideoInfo.iSizeInTwips.iWidth = KConfigLcdWidthInTwips;
@@ -273,16 +281,6 @@ TInt DLcdPowerHandler::AllocateFrameBuffer()
 
 	iSecureVideoInfo = iVideoInfo;
 	iSecureVideoInfo.iVideoAddress = (TInt)pV2;
-
-#if 0
-	WriteReg(iPortAddr, FB_ENABLED, 0);
-	WriteReg(IPortAddr, FB_INT_MASK, 0);
-	WriteReg(iPortAddr, FB_BASE, iSecureDisplay ? iSecurevRamPhys : ivRamPhys);
-	WriteReg(iPortAddr, FB_WIDTH, iVideoInfo.iSizeInPixels.iWidth);
-	WriteReg(iPortAddr, FB_HEIGHT, iVideoInfo.iSizeInPixels.iHeight);
-	WriteReg(iPortAddr, FB_BLANK, 0);
-	WriteReg(iPortAddr, FB_ENABLED, 1);
-#endif
 	
 	return KErrNone;
 }
@@ -431,45 +429,6 @@ TInt DLcdPowerHandler::Create()
 	iDfcQ = Kern::DfcQue0();	// use low priority DFC queue for this driver 
 
 	iPortAddr = KHwBaseClcd;
-
-	// !@!
-#if 0	
-	// Map the video RAM
-	TInt vSize = TSyborg::VideoRamSize();
-	ivRamPhys = TSyborg::VideoRamPhys();
-
-	TInt r = DPlatChunkHw::New(iChunk,ivRamPhys,vSize,EMapAttrUserRw|EMapAttrBufferedC);
-	if(r != KErrNone)
-	  return r;
-
-	TUint* pV = (TUint*)iChunk->LinearAddress();
-
-	iSecurevRamPhys = ivRamPhys + vSize;
-	TInt r2 = DPlatChunkHw::New(iSecureChunk,iSecurevRamPhys,vSize,EMapAttrUserRw|EMapAttrBufferedC);
-	if(r2 != KErrNone)
-	  return r2;
-
-	TUint* pV2 = (TUint*)iSecureChunk->LinearAddress();
-#endif
-
-	iVideoInfo.iSizeInPixels.iWidth  = KConfigLcdWidth;
-	iVideoInfo.iSizeInPixels.iHeight = KConfigLcdHeight;
-	iVideoInfo.iDisplayMode = KConfigLcdDisplayMode;
-
-	iVideoInfo.iOffsetToFirstPixel = KConfigOffsetToFirstPixel;
-	iVideoInfo.iOffsetBetweenLines = KConfigOffsetBetweenLines;
-
-	iVideoInfo.iIsPalettized = KConfigIsPalettized;
-	iVideoInfo.iBitsPerPixel = KConfigBitsPerPixel;
-	iVideoInfo.iSizeInTwips.iWidth = KConfigLcdWidthInTwips;
-	iVideoInfo.iSizeInTwips.iHeight = KConfigLcdHeightInTwips;
-	iVideoInfo.iIsMono = KConfigIsMono;
-	// !@!	iVideoInfo.iVideoAddress = (TInt)pV;
-	iVideoInfo.iIsPixelOrderLandscape = KConfigPixelOrderLandscape;
-	iVideoInfo.iIsPixelOrderRGB = KConfigPixelOrderRGB;
-
-	iSecureVideoInfo = iVideoInfo;
-	// !@! iSecureVideoInfo.iVideoAddress = (TInt)pV2;
 
 	AllocateFrameBuffer();
 	TInt r = Kern::AddHalEntry(EHalGroupDisplay,DoHalFunction,this);

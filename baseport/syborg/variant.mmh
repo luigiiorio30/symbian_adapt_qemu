@@ -15,6 +15,8 @@
 *
 */
 
+#include <platform_paths.hrh>
+
 //macro   __CPU_ARM926J__
 //#define __CPU__ ARM926EJ-S
 
@@ -118,6 +120,11 @@ systeminclude	/epoc32/include/memmodel/epoc/mmubase
 //systeminclude	/epoc32/include/memmodel/epoc/flexible/arm
 systeminclude	/epoc32/include/memmodel/epoc/multiple
 systeminclude	/epoc32/include/memmodel/epoc/multiple/arm
+
+SYMBIAN_BASE_SYSTEMINCLUDE(memmodel/epoc/mmubase)
+SYMBIAN_BASE_SYSTEMINCLUDE(memmodel/epoc/multiple)
+SYMBIAN_BASE_SYSTEMINCLUDE(memmodel/epoc/multiple/arm)
+OS_LAYER_SYSTEMINCLUDE
 
 systeminclude	../../../../os/kernelhwsrv/driversupport/socassp/interface
 

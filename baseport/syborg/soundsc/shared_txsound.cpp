@@ -1,6 +1,4 @@
 /*
-* Copyright (c) 2009 Nokia Corporation and/or its subsidiary(-ies).
-* All rights reserved.
 * This component and the accompanying materials are made available
 * under the terms of the License "Eclipse Public License v1.0"
 * which accompanies this distribution, and is available
@@ -10,41 +8,91 @@
 * Nokia Corporation - initial contribution.
 *
 * Contributors:
+* Accenture Ltd
 *
-* Description:
+* Description: This file is a part of sound driver for Syborg adaptation.
 *
 */
 
 #include "shared_sound.h"
 #include "variant_sound.h"
+#include "../specific/syborg.h"
 
-void TimerCallback(TAny* aData)
+#include "virtio.h"
+#include "virtio_audio.h"
+#include "virtio_iohandler.h"
+
+using namespace VirtIo;
+
+static TInt GetSampleRate( TSoundRate aRate)
 	{
-	DDriverSyborgSoundScPdd * soundscpdd = (DDriverSyborgSoundScPdd*) aData;
-		
-	soundscpdd->Callback(soundscpdd->iTransferArray[0].iTransferID, KErrNone, soundscpdd->iTransferArray[0].iNumBytes);
-	
+	switch(aRate)
+		{
+		case ESoundRate7350Hz: 	return 7350;
+		case ESoundRate8000Hz: 	return 8000;
+		case ESoundRate8820Hz: 	return 8820;
+		case ESoundRate9600Hz: 	return 9600;
+		case ESoundRate11025Hz: return 11025;
+		case ESoundRate12000Hz: return 12000;
+		case ESoundRate14700Hz:	return 14700;
+		case ESoundRate16000Hz: return 16000;
+		case ESoundRate22050Hz: return 22050;
+		case ESoundRate24000Hz: return 24000;
+		case ESoundRate29400Hz: return 29400;
+		case ESoundRate32000Hz: return 32000;
+		case ESoundRate44100Hz: return 44100;
+		case ESoundRate48000Hz: return 48000;
+		}
+	return KErrNotFound;
 	}
 
-
-DDriverSyborgSoundScPdd::DDriverSyborgSoundScPdd() : iTimer(TimerCallback,this)
+static TInt GetSoundEncoding( TSoundEncoding aV )
 	{
+	switch (aV)
+		{
+		case ESoundEncoding8BitPCM: return Audio::EFormatS8;
+		case ESoundEncoding16BitPCM: return Audio::EFormatS16;
+		case ESoundEncoding24BitPCM: break; // not supported
+		}
+	return -KErrNotFound;
+	}
+static TInt GetChannels( TInt aV )
+	{
+	switch (aV)
+		{
+		case KSoundMonoChannel: return 1;
+		case KSoundStereoChannel: return 2;
+		}
+	return KErrNotFound;
+	}
 
+DDriverSyborgSoundScPdd::DDriverSyborgSoundScPdd(DDriverSyborgSoundScPddFactory* aPhysicalDevice, 
+	TInt aUnitType, VirtIo::DIoHandler* aIoHandler, TUint aDataQueueId )
+	: iPhysicalDevice(aPhysicalDevice),  iUnitType(aUnitType), iIoHandler( aIoHandler ), iDataQueueId( aDataQueueId )
+	{
 	}
 
 DDriverSyborgSoundScPdd::~DDriverSyborgSoundScPdd()
 	{
-	iTimer.Cancel();
+	SYBORG_SOUND_DEBUG("~DDriverSyborgSoundScPdd()");
+	iIoHandler->UnregisterClient( this );
+	delete iAudioControl;
+	SYBORG_SOUND_DEBUG("~DDriverSyborgSoundScPdd() - done");
 	}
-
 
 TInt DDriverSyborgSoundScPdd::DoCreate()
 	{
-
 	SetCaps();
-
-	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::DoCreate TxPdd");
 	
+	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::DoCreate TxPdd");
+
+	SYBORG_SOUND_DEBUG("Registering with IOHandler %x", iIoHandler );
+	iIoHandler->RegisterClient( this );
+	SYBORG_SOUND_DEBUG("Registered with IoHandler... Done %x", iIoHandler);
+	
+	iAudioControl = new Audio::DControl( *iIoHandler, iDataQueueId );
+	iAudioControl->Construct();
+		
 	return KErrNone;
 	}
 
@@ -60,7 +108,6 @@ void DDriverSyborgSoundScPdd::GetChunkCreateInfo(TChunkCreateInfo& aChunkCreateI
 
 void DDriverSyborgSoundScPdd::Caps(TDes8& aCapsBuf) const
 	{
-
 	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::Caps TxPdd");
 	
 	// Fill the structure with zeros in case it is a newer version than we know about
@@ -73,14 +120,40 @@ void DDriverSyborgSoundScPdd::Caps(TDes8& aCapsBuf) const
 
 TInt DDriverSyborgSoundScPdd::SetConfig(const TDesC8& aConfigBuf)
 	{
-
 	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::SetConfig TxPdd");
 	
 	// Read the new configuration from the LDD
 	TCurrentSoundFormatV02 config;
 	TPtr8 ptr((TUint8*) &config, sizeof(config));
 	Kern::InfoCopy(ptr, aConfigBuf);
+	
+	TInt channels = GetChannels(config.iChannels);
+	Audio::FormatId encoding = static_cast<Audio::FormatId>( GetSoundEncoding(config.iEncoding) );
+	TInt freq = GetSampleRate(config.iRate);
+	Audio::StreamDirection direction = static_cast<Audio::StreamDirection>(
+		(iUnitType == KSoundScRxUnit0)?Audio::EDirectionRecord
+		:(iUnitType == KSoundScTxUnit0)?Audio::EDirectionPlayback:-1 );
 
+	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::SetConfig c %x, e %x, f %x, d %x",
+		channels, encoding, freq, direction );
+	
+	if ( (channels < 0 )
+		|| ( encoding < 0 )
+		|| ( freq < 0 ) 
+		|| ( direction < 0 )
+		)
+		{
+		SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::SetConfig failed");		
+		return KErrArgument;
+		}
+	
+	TInt st = iAudioControl->Setup( direction, channels, encoding, freq );
+	if (st !=KErrNone)
+		{
+		SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::SetConfig failed %d", st);				
+		return st;
+		}
+	
 	iConfig = config;
 	
 	return KErrNone;
@@ -89,7 +162,6 @@ TInt DDriverSyborgSoundScPdd::SetConfig(const TDesC8& aConfigBuf)
 
 TInt DDriverSyborgSoundScPdd::SetVolume(TInt aVolume)
 	{
-	
 	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::Setvolume TxPdd");
 	
 	return KErrNone;
@@ -98,45 +170,19 @@ TInt DDriverSyborgSoundScPdd::SetVolume(TInt aVolume)
 
 TInt DDriverSyborgSoundScPdd::StartTransfer()
 	{
-	
-	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::starttransfer TxPdd");
-	
-	//Prepare for transfer
+	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::starttransfer TxPdd S");
+	iAudioControl->SendCommand( Audio::DControl::ERun );
 	return KErrNone;
-	
 	}
-
+	
+	
 TInt DDriverSyborgSoundScPdd::CalculateBufferTime(TInt aNumBytes)
 	{
-	
-	TUint samplerate=0;
-
-	// Let the compiler perform an integer division of rates
-	switch(iConfig.iRate)
-		{
-		case ESoundRate7350Hz: 	samplerate = 7350; break;
-		case ESoundRate8000Hz: 	samplerate = 8000; break;
-		case ESoundRate8820Hz: 	samplerate = 8820; break;
-		case ESoundRate9600Hz: 	samplerate = 9600; break;
-		case ESoundRate11025Hz: samplerate = 11025; break;
-		case ESoundRate12000Hz: samplerate = 12000; break;
-		case ESoundRate14700Hz:	samplerate = 14700; break;
-		case ESoundRate16000Hz: samplerate = 16000; break;
-		case ESoundRate22050Hz: samplerate = 22050; break;
-		case ESoundRate24000Hz: samplerate = 24000; break;
-		case ESoundRate29400Hz: samplerate = 29400; break;
-		case ESoundRate32000Hz: samplerate = 32000; break;
-		case ESoundRate44100Hz: samplerate = 44100; break;
-		case ESoundRate48000Hz: samplerate = 48000; break;
-		}
-
+	TUint samplerate=GetSampleRate( iConfig.iRate );
 
 	// integer division by number of channels
 	aNumBytes /= iConfig.iChannels;
 
-	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::iChannels =%d", iConfig.iChannels);
-	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::iEncoding =%d", iConfig.iEncoding);
-	
 	// integer division by bytes per sample
 	switch(iConfig.iEncoding)
 		{
@@ -146,55 +192,31 @@ TInt DDriverSyborgSoundScPdd::CalculateBufferTime(TInt aNumBytes)
 		}
 
 	return (aNumBytes * 1000) / samplerate; //return time in milliseconds
-	
-
 	}
 
-TInt DDriverSyborgSoundScPdd::TransferData(TUint aTransferID, TLinAddr aLinAddr, TPhysAddr /*aPhysAddr*/, TInt aNumBytes)
+TInt DDriverSyborgSoundScPdd::TransferData(TUint aTransferID, TLinAddr aLinAddr, TPhysAddr aPhysAddr, TInt aNumBytes)
 	{
+	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::TransferData unit %x aTId=%x, linAddr=%x,phAddr=%x,len=%x", 
+		iUnitType, aTransferID, aLinAddr, aPhysAddr, aNumBytes);
+	
+	iAudioControl->SendDataBuffer( 
+		reinterpret_cast<TAny*>( aLinAddr ), aNumBytes, reinterpret_cast<Token>( aTransferID ) );
 
-	//function wil get called multiple times while transfer is in progress therefore keep fifo queue of requests
-	TTransferArrayInfo transfer;	
-		
-	transfer.iTransferID = aTransferID;
-	transfer.iLinAddr = aLinAddr;
-	transfer.iNumBytes = aNumBytes;
-	
-	//calculate the amount of time required to play/record buffer
-	TInt buffer_play_time = CalculateBufferTime(aNumBytes);
-	TInt timerticks = NKern::TimerTicks(buffer_play_time);
-	transfer.iPlayTime = timerticks;
-	
-	iTransferArray.Append(transfer);
-	
-	//Timer will callback when correct time has elapsed, will return KErrInUse if transfer
-	//already active, this is ok becuase will be started again in callback
-	TInt err = iTimer.OneShot(timerticks, ETrue);
-	
-	
 	return KErrNone;
 	}
 
 void DDriverSyborgSoundScPdd::StopTransfer()
 	{
-	// Stop transfer
 	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::stoptransfer TxPdd");
 	
-	//If timer is currently active then cancel it and call back buffer
-	if(iTimer.Cancel())
-		{
-		Callback(iTransferArray[0].iTransferID, KErrNone, iTransferArray[0].iNumBytes);
-		}
-		
-
+	iAudioControl->SendCommand( Audio::DControl::EStop );
 	}
 
 
 TInt DDriverSyborgSoundScPdd::PauseTransfer()
 	{
 	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::pausetransfer TxPdd");
-	//Pause Transfer
-	
+	iAudioControl->SendCommand( Audio::DControl::EPause );
 	return KErrNone;
 	}
 
@@ -202,8 +224,7 @@ TInt DDriverSyborgSoundScPdd::PauseTransfer()
 TInt DDriverSyborgSoundScPdd::ResumeTransfer()
 	{
 	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::resumetransfer TxPdd");
-	//Resume Transfer
-	
+	iAudioControl->SendCommand( Audio::DControl::EResume );
 	return KErrNone;
 	}
 
@@ -220,51 +241,44 @@ void DDriverSyborgSoundScPdd::PowerDown()
 
 TInt DDriverSyborgSoundScPdd::CustomConfig(TInt /*aFunction*/,TAny* /*aParam*/)
 	{
-	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::customconfig TxPdd");
+	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::CustomConfig TxPdd");
 	return KErrNotSupported;
 	}
 
-
-void DDriverSyborgSoundScPdd::Callback(TUint aTransferID, TInt aTransferResult, TInt aBytesTransferred)
+TBool DDriverSyborgSoundScPdd::VirtIoCallback( MIoHandler& aVirtIoHandler, MQueue& aQueue, 
+	Token aToken, TUint aBytesTransferred )
 	{
-	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::playcallback TxPdd");
-	//Callback when Transfer completes or is stopped
+	if ( &aQueue != &iAudioControl->DataQueue() )
+		{ return ETrue; }
+			
+	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::VirtIoCallback t%x, s%x", aToken, aBytesTransferred);
 	
-	iTransferArray.Remove(0);
-	
-	if(iUnitType == KSoundScTxUnit0)
+	if ( iCaps.iDirection == ESoundDirPlayback )
 		{
-		Ldd()->PlayCallback(aTransferID, aTransferResult, aBytesTransferred);
+		Ldd()->PlayCallback( (TUint) aToken, KErrNone, aBytesTransferred );
 		}
-	else if(iUnitType == KSoundScRxUnit0)
+	else
 		{
-		Ldd()->RecordCallback(aTransferID, aTransferResult, aBytesTransferred);
+		Ldd()->RecordCallback( (TUint) aToken, KErrNone, aBytesTransferred );
 		}
-	
-	if(	iTransferArray.Count()>0)
-		{
-		iTimer.OneShot(iTransferArray[0].iPlayTime, ETrue);
-		}
-	
+		
+	return EFalse; // cannot process any more buffers in this go due to a bug in LDD?
 	}
 
-TDfcQue*DDriverSyborgSoundScPdd::DfcQ(TInt /* aUnit*/ )
-        {
-        return this->DfcQ();
-        }
-
 TDfcQue*DDriverSyborgSoundScPdd::DfcQ()
-        {
-        return iPhysicalDevice->iDfcQ;
-        }
+	{
+	return iPhysicalDevice->iDfcQ;
+	}
+	
+TDfcQue*DDriverSyborgSoundScPdd::DfcQ( TInt /* aUinit */ )
+	{
+	return iPhysicalDevice->iDfcQ;
+	}
+
 
 TInt DDriverSyborgSoundScPdd::MaxTransferLen() const
 	{
-	
-	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPdd::MaxTransferLen TxPdd");
-	
-	TInt maxlength = 200*1024;
-	return maxlength;
+	return KMaxTransferLength; 
 	}
 
 
@@ -279,7 +293,7 @@ void DDriverSyborgSoundScPdd::SetCaps()
 		}
 	else if(iUnitType == KSoundScRxUnit0)
 		{
-		// The data transfer direction for this unit is record 
+		// The data transfer direction for this unit is play
 		iCaps.iDirection = ESoundDirRecord;
 		}
 	

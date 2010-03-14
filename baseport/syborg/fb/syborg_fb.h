@@ -11,6 +11,8 @@
 *
 * Contributors:
 *
+* Accenture Ltd - Syborg framebuffer improvements, now auto determines frame size from board model, performance and memory improvements
+*
 * Description: Minimalistic frame buffer driver
 *
 */
@@ -25,54 +27,10 @@
 #include <system.h>
 
 
-
-// The definition of __portrait_display__ in the MMP file affects
-// both the display and the pointer component, so both must be
-// rebuilt if this setting is changed.
-
-
 _LIT(KLitLcd,"SYBORG_FB");
 
-
-#ifdef __PORTRAIT_DISPLAY__ // portrait display selected
-
-#	ifdef __DISPLAY_WVGA__
-
-#pragma comment(layout,"Portrait display enabled")
-const TUint KConfigLcdWidth            	= 854; // This must be left at 640, even with only 360 used by S60
-const TUint	KConfigLcdHeight	       	= 854;
-const TInt	KConfigLcdHeightInTwips     = 12860;
-const TInt	KConfigLcdWidthInTwips    	= 12860;
-const TUint	KConfigMouseWidth	       	= 480; // Usable width for the mouse driver
-const TUint	KConfigMouseMin			   	= 0;
-
-#	else //__DISPLAY_WVGA__
-
-#pragma comment(layout,"Portrait display enabled")
-const TUint KConfigLcdWidth            = 640; // This must be left at 640, even with only 360 used by S60
-const TUint	KConfigLcdHeight	       = 640;
-const TInt	KConfigLcdHeightInTwips     = 3550;
-const TInt	KConfigLcdWidthInTwips    = 3550;
-const TUint	KConfigMouseWidth	       = 360; // Usable width for the mouse driver
-
-const TUint	KConfigMouseMin			   = 0;
-#	endif //__DISPLAY_WVGA__
-
-
-
-
-#else // __PORTRAIT_DISPLAY__  Landscape display selected
-
-#pragma comment(layout,"Landscape display enabled")
-const TUint  KConfigLcdWidth            = 640;
-const TUint	KConfigLcdHeight	       = 480;
-const TInt	KConfigLcdWidthInTwips     = 3550;
-const TInt	KConfigLcdHeightInTwips    = 2670;
-const TUint	KConfigMouseWidth	       = 640; // Usable width for the mouse driver
-
-const TUint	KConfigMouseMin			   = 120; // mouse range is 120 - 480, not 0 - 360
-#endif // __PORTRAIT_DISPLAY__
-
+const TInt	KConfigLcdWidthInTwips     = 9638;
+const TInt	KConfigLcdHeightInTwips    = 7370;
 
 const TBool KConfigIsMono              = 0;
 const TBool KConfigIsPalettized        = 0;
@@ -82,17 +40,14 @@ const TInt  KConfigOffsetToFirstPixel  = 0;
 const TBool KConfigPixelOrderRGB       = 0;
 const TBool KConfigPixelOrderLandscape = 1;
 const TInt  KConfigLcdDisplayMode       = 2;
-//const TInt  KConfigLcdDisplayMode       = 1;
+
+
 const TInt  KConfigLcdNumberOfDisplayModes = 3;
 
 
 const TInt  KConfigBitsPerPixel        = 24;
 
-#ifdef __DISPLAY_WVGA__
-const TInt  KConfigOffsetBetweenLines  = 3416;
-#else //__DISPLAY_WVGA__
-const TInt  KConfigOffsetBetweenLines  = 2560;
-#endif //__DISPLAY_WVGA__
+
 
 
 class DLcdPowerHandler : public DPowerHandler

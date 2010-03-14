@@ -1072,6 +1072,17 @@ static int qemu_py_chardev_init(qemu_py_chardev *self, PyObject *args,
     return 0;
 }
 
+static PyObject *qemu_py_chardev_handle_connect(qemu_py_chardev *self,
+                                     PyObject *args)
+{
+    if (!self->chr)
+        Py_RETURN_NONE;
+    
+    qemu_chr_connect(self->chr);
+    
+    Py_RETURN_NONE; 
+}
+
 static PyObject *qemu_py_chardev_set_handlers(qemu_py_chardev *self,
                                               PyObject *args, PyObject *kwds)
 {
@@ -1147,6 +1158,9 @@ static PyMemberDef qemu_py_chardev_members[] = {
 };
 
 static PyMethodDef qemu_py_chardev_methods[] = {
+    {"handle_connect", (PyCFunction)qemu_py_chardev_handle_connect,
+      METH_NOARGS,
+      "Handle character device connect if required"},
     {"set_handlers", (PyCFunction)qemu_py_chardev_set_handlers,
       METH_VARARGS|METH_KEYWORDS,
      "Set event handlers"},

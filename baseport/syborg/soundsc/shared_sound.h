@@ -1,6 +1,4 @@
 /*
-* Copyright (c) 2009 Nokia Corporation and/or its subsidiary(-ies).
-* All rights reserved.
 * This component and the accompanying materials are made available
 * under the terms of the License "Eclipse Public License v1.0"
 * which accompanies this distribution, and is available
@@ -10,8 +8,9 @@
 * Nokia Corporation - initial contribution.
 *
 * Contributors:
+* Accenture Ltd
 *
-* Description:
+* Description: This file is a part of sound driver for Syborg adaptation.
 *
 */
 
@@ -20,19 +19,36 @@
 
 #include <soundsc.h>
 
-#ifdef _DEBUG
+#ifdef _ENABLE_SYBORG_AUDIO_DRIVER_DEBUG
 #define SYBORG_SOUND_DEBUG(x...) Kern::Printf(x)
 #else
 #define SYBORG_SOUND_DEBUG(x...)
 #endif
 
+#undef ASSERT
+#define ASSERT(x) (x) || (Kern::Printf("Sound.pdd: ASSERTION FAILED: "#x),0);
+
+#include "virtio_audio.h"
+#include "virtio.h"
+#include "virtio_audio_defs.h"
+
+/// @brief defines the maximum size for a single audio data transfer
+static const TInt KMaxTransferLength = 128 * 1024;
+
+namespace VirtIo
+{
+class DIoHandler;
+}
+
 class DDriverSyborgSoundScPddFactory;
 
-class DDriverSyborgSoundScPdd : public DSoundScPdd
+
+class DDriverSyborgSoundScPdd : public DSoundScPdd, VirtIo::MIoCallback
 	{
 public:
 
-	DDriverSyborgSoundScPdd();
+	DDriverSyborgSoundScPdd(DDriverSyborgSoundScPddFactory* aPhysicalDevice, 
+		TInt aUnitType, VirtIo::DIoHandler *aIoHandler, TUint aDataQueueId);
 	~DDriverSyborgSoundScPdd();
 	TInt DoCreate();
 	void GetChunkCreateInfo(TChunkCreateInfo& aChunkCreateInfo);
@@ -48,48 +64,35 @@ public:
 	TInt PowerUp();
 	void PowerDown();
 	TInt CustomConfig(TInt aFunction, TAny* aParam);
-	void Callback(TUint aTransferID, TInt aTransferResult, TInt aBytesTransferred);
-
 	void SetCaps();
-        // There was a change in the signature for DfcQ() which
-        // is a pure virtual method in the parent.
-        //  for Symbian^2
-        TDfcQue* DfcQ();
-        //  for Symbian^3
-	TDfcQue* DfcQ(TInt aUnit);
+	TDfcQue* DfcQ();
+	TDfcQue* DfcQ( TInt aUnit );
 	
 	TInt CalculateBufferTime(TInt aNumBytes);
+private:
+
+	// implementation of VirtIo::MIoCallback
+	virtual TBool VirtIoCallback( VirtIo::MIoHandler& aVirtIoHandler, VirtIo::MQueue& aQueue, 
+		VirtIo::Token aToken, TUint aBytesTransferred );
 
 public:
 	
 	DDriverSyborgSoundScPddFactory*	iPhysicalDevice;
 	
-	class TTransferArrayInfo{
-
-public:
-	TUint 						iTransferID;
-	TLinAddr 					iLinAddr;
-	TInt 						iNumBytes;
-	TInt						iPlayTime;
-	};
-	
-	RArray<TTransferArrayInfo> iTransferArray;
-	
-	NTimer						iTimer;
-	
 	TInt						iUnitType; //Play or Record
+
+	VirtIo::MIoHandler* iIoHandler;
+	
+	TUint iDataQueueId;
 	
 private:
 
 	TSoundFormatsSupportedV02	iCaps;
 	
 	TCurrentSoundFormatV02		iConfig;
+
+	VirtIo::Audio::DControl* iAudioControl;
 	
-
-
 	};
-
-
-
 
 #endif 

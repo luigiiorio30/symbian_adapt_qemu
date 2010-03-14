@@ -64,7 +64,9 @@ enum TSyborgInterruptId
   EIntSerial0 = 5,
   EIntSerial1 = 6,
   EIntSerial2 = 7,
-  EIntSerial3 = 8
+  EIntSerial3 = 8,
+  EIntNet0 = 9,
+  EIntAudio0 = 10
 };
 
 // Timer Mode

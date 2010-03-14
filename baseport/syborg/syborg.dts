@@ -50,6 +50,8 @@
         };
         framebuffer@0 {
             compatible = "syborg,framebuffer";
+	    width = <168>;
+            height = <280>;
             reg = <c0005000>;
             interrupts = <4>;
             interrupt-parent = <&intc>;

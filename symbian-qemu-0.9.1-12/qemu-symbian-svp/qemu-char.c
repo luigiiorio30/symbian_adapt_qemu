@@ -123,6 +123,12 @@ void qemu_chr_reset(CharDriverState *s)
     }
 }
 
+void qemu_chr_connect(CharDriverState *s)
+{
+    if (s->chr_connect)
+        s->chr_connect(s);
+}
+
 int qemu_chr_write(CharDriverState *s, const uint8_t *buf, int len)
 {
     return s->chr_write(s, buf, len);
@@ -603,6 +609,20 @@ static CharDriverState *qemu_chr_open_file_out(const char *file_out)
     if (fd_out < 0)
         return NULL;
     return qemu_chr_open_fd(-1, fd_out);
+}
+
+static CharDriverState *qemu_chr_open_tempfile_out(const char *temp_file)
+{
+    CharDriverState *ret = NULL;
+    const char *temp_format = "/tmp/%s";
+    char *fname = qemu_mallocz(sizeof(char) * (strlen(temp_path) + strlen(temp_file)));
+    if (fname)
+    {
+        sprintf(fname, temp_format, temp_file);
+        ret = qemu_chr_open_file_out(fname);
+        qemu_free(fname);
+    }
+    return ret;
 }
 
 static CharDriverState *qemu_chr_open_pipe(const char *filename)
@@ -1757,6 +1777,29 @@ static CharDriverState *qemu_chr_open_win_file_out(const char *file_out)
 
     return qemu_chr_open_win_file(fd_out);
 }
+
+static CharDriverState *qemu_chr_open_win_tempfile_out(const char *temp_file)
+{
+    CharDriverState *ret = NULL;
+    char* fname;
+    const char* temp_format = "%s\\%s";
+    const char* temp_path;
+    
+    temp_path = getenv("TEMP");
+    if (temp_path)
+    {
+        fname = qemu_mallocz(sizeof(char) * (strlen(temp_path) + strlen(temp_file) + strlen(temp_format)));
+        if (fname)
+        {
+            sprintf(fname, temp_format, temp_path, temp_file);
+            ret = qemu_chr_open_win_file_out(fname);
+            qemu_free(fname);
+        }
+    }
+
+    return ret;
+}
+
 #endif /* !_WIN32 */
 
 /***********************************************************/
@@ -1886,6 +1929,8 @@ typedef struct {
     int do_telnetopt;
     int do_nodelay;
     int is_unix;
+    int wait_connect;
+    int device_handles_connect;
 } TCPCharDriver;
 
 static void tcp_chr_accept(void *opaque);
@@ -2063,6 +2108,26 @@ static void tcp_chr_accept(void *opaque)
     tcp_chr_connect(chr);
 }
 
+static void tcp_chr_do_connect(CharDriverState* chr)
+{
+    TCPCharDriver *driver = (TCPCharDriver*)chr->opaque;
+    if (driver->device_handles_connect)
+    {
+        if (-1 != driver->listen_fd)
+        {
+            printf("QEMU waiting for connection...\n");
+            tcp_chr_accept(chr);
+            socket_set_nonblock(driver->listen_fd);
+        }
+        else
+        {
+            driver->connected = 1;
+            socket_set_nodelay(driver->fd);
+            tcp_chr_connect(chr);
+        }
+    }
+}
+
 static void tcp_chr_close(CharDriverState *chr)
 {
     TCPCharDriver *s = chr->opaque;
@@ -2083,6 +2148,7 @@ static CharDriverState *qemu_chr_open_tcp(const char *host_str,
     int is_listen = 0;
     int is_waitconnect = 1;
     int do_nodelay = 0;
+    int is_device_handles_connect = 0;
     const char *ptr;
 
     ptr = host_str;
@@ -2096,6 +2162,8 @@ static CharDriverState *qemu_chr_open_tcp(const char *host_str,
             do_nodelay = 1;
         } else if (!strncmp(ptr,"to=",3)) {
             /* nothing, inet_listen() parses this one */;
+        } else if (!strncmp(ptr, "devicehandlesconnect", 20) && !is_unix) {
+            is_device_handles_connect = 1;
         } else {
             printf("Unknown option: %s\n", ptr);
             goto fail;
@@ -2107,6 +2175,7 @@ static CharDriverState *qemu_chr_open_tcp(const char *host_str,
     chr = qemu_mallocz(sizeof(CharDriverState));
     if (!chr)
         goto fail;
+        
     s = qemu_mallocz(sizeof(TCPCharDriver));
     if (!s)
         goto fail;
@@ -2147,10 +2216,13 @@ static CharDriverState *qemu_chr_open_tcp(const char *host_str,
     s->listen_fd = -1;
     s->is_unix = is_unix;
     s->do_nodelay = do_nodelay && !is_unix;
+    s->wait_connect = is_waitconnect;
+    s->device_handles_connect = is_device_handles_connect;
 
     chr->opaque = s;
     chr->chr_write = tcp_chr_write;
     chr->chr_close = tcp_chr_close;
+    chr->chr_connect = tcp_chr_do_connect;
 
     if (is_listen) {
         s->listen_fd = fd;
@@ -2158,13 +2230,17 @@ static CharDriverState *qemu_chr_open_tcp(const char *host_str,
         if (is_telnet)
             s->do_telnetopt = 1;
     } else {
-        s->connected = 1;
         s->fd = fd;
-        socket_set_nodelay(fd);
-        tcp_chr_connect(chr);
+        
+        if (!is_device_handles_connect)
+        {
+            s->connected = 1;
+            socket_set_nodelay(fd);
+            tcp_chr_connect(chr);
+        }
     }
 
-    if (is_listen && is_waitconnect) {
+    if (is_listen && is_waitconnect && !is_device_handles_connect) {
         printf("QEMU waiting for connection on: %s\n",
                chr->filename ? chr->filename : host_str);
         tcp_chr_accept(chr);
@@ -2220,6 +2296,8 @@ CharDriverState *qemu_chr_open(const char *label, const char *filename)
 	chr = qemu_chr_open_tcp(p, 0, 1);
     } else if (strstart(filename, "file:", &p)) {
         chr = qemu_chr_open_file_out(p);
+    } else if (strstart(filename, "tempfile:", &p)) {
+        chr = qemu_chr_open_tempfile_out(p);
     } else if (strstart(filename, "pipe:", &p)) {
         chr = qemu_chr_open_pipe(p);
     } else if (!strcmp(filename, "pty")) {
@@ -2251,6 +2329,9 @@ CharDriverState *qemu_chr_open(const char *label, const char *filename)
     } else
     if (strstart(filename, "file:", &p)) {
         chr = qemu_chr_open_win_file_out(p);
+    } else
+    if (strstart(filename, "tempfile:", &p)) {
+        chr = qemu_chr_open_win_tempfile_out(p);
     } else
     if (strstart(filename, "stdio", &p)) {
         return qemu_chr_open_win_stdio(filename);

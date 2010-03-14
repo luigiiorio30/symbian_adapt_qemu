@@ -26,6 +26,7 @@
 #include "devtree.h"
 #include "hw/boards.h"
 #include "libfdt/libfdt.h"
+#include "qemu-char.h"
 
 #define BADF(fmt, args...) \
 do { fprintf(stderr, "error: " fmt , ##args); exit(1);} while (0)
@@ -413,7 +414,15 @@ static void create_from_node(QEMUDeviceClass *dc, const void *dt, int node)
         if (propstr) {
             i = sscanf(propstr, "serial%d", &n);
             if (i == 1 && n >= 0 && n < MAX_SERIAL_PORTS)
+            {
+                if (!serial_hds[n])
+                {
+                    const char* target = fdt_getprop_string(dt, node, "target");
+                    if (target)
+                        serial_hds[n] = qemu_chr_open(propstr, target);
+                }
                 d->chardev = serial_hds[n];
+            }
         }
     }
     find_properties(d);

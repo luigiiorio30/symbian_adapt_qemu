@@ -15,14 +15,26 @@
 *
 */
 
-TARGET         svphostfsstart.exe        
-TARGETTYPE     EXE
-SOURCEPATH	   fs
-SOURCE         svphostfsstart.cpp
-LIBRARY        euser.lib efsrv.lib efile.lib hal.lib
-SYSTEMINCLUDE  inc	
-SYSTEMINCLUDE  /epoc32/include 
-OS_LAYER_SYSTEMINCLUDE
+#include <variant.mmh>
+#include "kernel/kern_ext.mmh"
 
-CAPABILITY		DISKADMIN ALLFILES
-VENDORID 0x70000001
+TARGET			VariantTarget(svpframebuffer,dll)
+TARGETTYPE		kext
+
+SYMBIAN_BASE_SYSTEMINCLUDE(drivers)
+SYSTEMINCLUDE	AsspNKernIncludePath
+SYSTEMINCLUDE	.
+
+SOURCEPATH		.
+SOURCE			svpframebuffer.cpp
+
+LIBRARY			PlatformLib
+
+EPOCALLOWDLLDATA
+
+UID			    0x1000008d 0x100039e8
+VENDORID        0x70000001
+
+ROMTARGET		lcd.dll
+
+CAPABILITY		all

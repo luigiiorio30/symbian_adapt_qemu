@@ -1,6 +1,4 @@
 /*
-* Copyright (c) 2009 Nokia Corporation and/or its subsidiary(-ies).
-* All rights reserved.
 * This component and the accompanying materials are made available
 * under the terms of the License "Eclipse Public License v1.0"
 * which accompanies this distribution, and is available
@@ -10,25 +8,27 @@
 * Nokia Corporation - initial contribution.
 *
 * Contributors:
+* Accenture Ltd
 *
-* Description:
+* Description: This file is a part of sound driver for Syborg adaptation.
 *
 */
 
 #include "variant_sound.h"
+#include "virtio_iohandler.h"
+#include "../specific/syborg.h"
 
 _LIT(KSoundScPddName, "SoundSc.Syborg");
 
-
 DECLARE_STANDARD_PDD()
 	{
+	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPddFactory created\n");
 	return new DDriverSyborgSoundScPddFactory;
 	}
 
 
 DDriverSyborgSoundScPddFactory::DDriverSyborgSoundScPddFactory()
 	{
-
 	iUnitsMask = ((1 << KSoundScTxUnit0) | (1 << KSoundScRxUnit0));
 
 	iVersion = RSoundSc::VersionRequired();
@@ -38,20 +38,61 @@ DDriverSyborgSoundScPddFactory::DDriverSyborgSoundScPddFactory()
 TInt DDriverSyborgSoundScPddFactory::Install()
 	{
 	_LIT(KAudioDFC, "AUDIO DFC");
-	// Get a pointer to the the McBSP's DFC Queue so that handling of both McBSP callbacks and requests
-	// made to the LDD from user mode can be processed in the same thread, to avoid the use of semaphores
-	TInt r = Kern::DfcQCreate(iDfcQ, 26, &KAudioDFC);
+	
+	// LDD driver is going to use the same queue.
+	TInt r = Kern::DynamicDfcQCreate(iDfcQ, KAudioDfcQueuePriority, KAudioDFC);
 
 	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPddFactory::PDD install");
 
-	if(r==KErrNone)
+	if(r!=KErrNone)
 		{
-		// All PDD factories must have a unique name
-		TInt r = SetName(&KSoundScPddName);
+		SYBORG_SOUND_DEBUG("Creating audio DFC failed %d",r);
+		return r;
 		}
-
+	// All PDD factories must have a unique name
+	r = SetName(&KSoundScPddName);
+	if (r!=KErrNone)
+		{
+		SYBORG_SOUND_DEBUG("Setting name %x",r);
+		return r;
+		}
+	iIoHandler = new VirtIo::DIoHandler(	
+		(TAny*)KHwSVPAudioDevice, 
+		EIntAudio0,
+		iDfcQ );
+	
+	if (iIoHandler == NULL)
+		{
+		iDfcQ->Destroy();
+		return KErrNoMemory;
+		}
+	
+	SYBORG_SOUND_DEBUG("Constructing IoHandler");
+	
+	r = iIoHandler->Construct();
+	
+	if ( r != KErrNone)
+		{
+		iDfcQ->Destroy();		
+		delete iIoHandler;
+		}
+		
+	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPddFactory::PDD installed");
+	
 	return r;
 	}
+	
+DDriverSyborgSoundScPddFactory::~DDriverSyborgSoundScPddFactory()
+	{
+	if (iIoHandler)
+		{
+		delete iIoHandler;
+		iIoHandler = NULL;
+		}
+	if (iDfcQ)
+		iDfcQ->Destroy();
+	}
+	
 
 void DDriverSyborgSoundScPddFactory::GetCaps(TDes8& /*aDes*/) const
 	{
@@ -81,8 +122,6 @@ TInt DDriverSyborgSoundScPddFactory::Validate(TInt aUnit, const TDesC8* /*aInfo*
 TInt DDriverSyborgSoundScPddFactory::Create(DBase*& aChannel, TInt aUnit, const TDesC8* /*aInfo*/, const TVersion& /*aVer*/)
 	{
 
-	DSoundScPdd* pD = NULL;
-
 	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPddFactory::PDD create aUnit %d TxUnitId %d", aUnit, KSoundScTxUnit0);
 
 	// Assume failure
@@ -90,21 +129,14 @@ TInt DDriverSyborgSoundScPddFactory::Create(DBase*& aChannel, TInt aUnit, const 
 	aChannel = NULL;
 
 				
-	DDriverSyborgSoundScPdd* pTxD = new DDriverSyborgSoundScPdd;
+	DDriverSyborgSoundScPdd* pTxD = new DDriverSyborgSoundScPdd( this, aUnit, 
+		iIoHandler, aUnit == KSoundScTxUnit0?1:2 );
 
-	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPddFactory::TxPdd %d", pTxD);
+	SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPddFactory::TxPdd %x", pTxD);
 		
 	if (pTxD)
 		{
-		pD = pTxD;
-
-		// Save a pointer to the factory so that it is accessible by the PDD and call the PDD's
-		// second stage constructor
-		pTxD->iPhysicalDevice = this;
-			
-		pTxD->iUnitType = aUnit; // Either KSoundScTxUnit0 or KSoundScRxUnit0 (play or record)
-			
-		SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPddFactory::TxPdd2 %d", pTxD);
+		SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPddFactory::TxPdd2 %x", pTxD);
 			
 		r = pTxD->DoCreate();
 			
@@ -116,13 +148,19 @@ TInt DDriverSyborgSoundScPddFactory::Create(DBase*& aChannel, TInt aUnit, const 
 	// as some LDDs have been known to access this pointer even if Create() returns an error!
 	if (r == KErrNone)
 		{
-		aChannel = pD;
-		SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPddFactory::TxPdd set AChannel %d", aChannel);
+		aChannel = pTxD;
+		SYBORG_SOUND_DEBUG("DDriverSyborgSoundScPddFactory::TxPdd set AChannel %x", aChannel);
 		}
 	else
 		{
-		delete pD;
+		delete pTxD;
 		}
 
 	return r;
+	}
+
+	
+VirtIo::MIoHandler* DDriverSyborgSoundScPddFactory::IoHandler()
+	{
+	return iIoHandler;
 	}

@@ -69,19 +69,14 @@ extension[VARID]=	KERNEL_DIR\DEBUG_DIR\kdebug.dll			        \sys\bin\kdebug.dll
 extension[VARID]=	KERNEL_DIR\DEBUG_DIR\evfp.dll			        \sys\bin\evfp.dll
 
 
-// Changes allowing us of either portrait or landscape mode
-//extension[VARID]=	KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_lcd.dll		\sys\bin\lcd.dll
-#ifdef _PORTRAIT_
-
-#	ifdef _WVGA_
-extension[VARID]=KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_lcd_portrait_wvga.dll		    \sys\bin\lcd.dll
-#	else //_WVGA_
-extension[VARID]=KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_lcd_portrait.dll		    \sys\bin\lcd.dll
-#	endif //_WVGA_
-
+// Either include NGA or Non NGA Framebuffer
+#ifdef SYMBIAN_BASE_USE_GCE
+extension[VARID]=KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_svpframebuffer.dll	\sys\bin\lcd.dll
+device[VARID]=KERNEL_DIR\DEBUG_DIR\display.ldd				\sys\bin\display0.ldd
 #else
-extension[VARID]=KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_lcd_landscape.dll		    \sys\bin\lcd.dll
+extension[VARID]=	KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_lcd.dll		\sys\bin\lcd.dll
 #endif
+
 
 device[VARID]=		KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_eserial.pdd		\sys\bin\euart1.pdd
 device[VARID]=		KERNEL_DIR\DEBUG_DIR\ecomm.ldd				\sys\bin\ecomm.ldd
@@ -133,12 +128,22 @@ define	HAL_DLL		_PLATFORM_NAME_hal.dll
 define	ESTART_EXE		_PLATFORM_NAME_e32strt.exe	// customised ESTART
 
 define	KEYMAP_FILE	_PLATFORM_NAME_ekdata
+
+file=ABI_DIR\DEBUG_DIR\KEYMAP_FILE.dll	\sys\bin\ekdata.dll
+
 #define	SCDV_DLL        _PLATFORM_NAME_scdv.dll
 #define	EUSER_DLL	_PLATFORM_NAME_euser.dll
+
+device[VARID] 	=KERNEL_DIR\DEBUG_DIR\pipelib.ldd		\sys\bin\pipelib.ldd
 
 
 device[VARID]	=KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_soundsc.pdd	    \sys\bin\soundsc.pdd
 device[VARID]	=KERNEL_DIR\DEBUG_DIR\esoundsc.ldd				            \sys\bin\esoundsc.ldd
+
+//add sampling profiler
+file= KERNEL_DIR\DEBUG_DIR\profiler.exe		\sys\bin\profiler.exe
+device[VARID] =KERNEL_DIR\DEBUG_DIR\sampler.ldd		\sys\bin\sampler.ldd
+
 
 #endif  // __BASE_SYBORG_IBY__
 

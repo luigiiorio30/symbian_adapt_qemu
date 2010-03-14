@@ -20,6 +20,7 @@ targettype		klib
 
 systeminclude 		libfdt
 systeminclude 		/epoc32/include/stdapis
+OS_LAYER_LIBC_SYSTEMINCLUDE
 
 sourcepath		libfdt
 
