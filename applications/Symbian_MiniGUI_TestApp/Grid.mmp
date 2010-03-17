@@ -14,5 +14,5 @@ TARGET			grid.EXE
 TARGETTYPE		EXE
 SOURCEPATH		.
 SOURCE			grid.cpp
-SYSTEMINCLUDE		\epoc32\include
+OS_LAYER_SYSTEMINCLUDE
 LIBRARY			efsrv.lib euser.lib hal.lib ws32.lib 
