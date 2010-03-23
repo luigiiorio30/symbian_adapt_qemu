@@ -41,8 +41,11 @@ define ASSP_DIR			EPOCROOT##epoc32\release\syborg
 
 define ROMMEGS			50		/* !! HEX !! */
 define PLATFORM_NAME		syborg
-
+#define BASEPORT_DRV <base_syborg.iby>
 #define COLOR
+#undef SYMBIAN_EXCLUDE_SCDV
+
+
 
 REM defines for IrDA options
 REM Uncomment the line below to enable IrDA to use a Jeteye ESI09680 pod with serial card adapter

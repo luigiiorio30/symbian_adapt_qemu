@@ -20,7 +20,8 @@ ARMV5
 
 PRJ_EXPORTS
 syborg.oby						/epoc32/rom/include/	//
-base.iby						/epoc32/rom/include/	//
+//MattD - don't export the base.iby as you end up fighting with the kernel and everyone else...
+//base.iby						/epoc32/rom/include/	//
 rom/base_syborg.iby				/epoc32/rom/include/	//
 rom/header.iby					/epoc32/rom/syborg/		//
 rom/kernel.iby					/epoc32/rom/syborg/		//

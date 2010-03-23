@@ -131,7 +131,7 @@ define	KEYMAP_FILE	_PLATFORM_NAME_ekdata
 
 file=ABI_DIR\DEBUG_DIR\KEYMAP_FILE.dll	\sys\bin\ekdata.dll
 
-#define	SCDV_DLL        _PLATFORM_NAME_scdv.dll
+#define	SCDV_DLL        _generic_scdv.dll
 #define	EUSER_DLL	_PLATFORM_NAME_euser.dll
 
 device[VARID] 	=KERNEL_DIR\DEBUG_DIR\pipelib.ldd		\sys\bin\pipelib.ldd
