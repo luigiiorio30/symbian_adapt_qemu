@@ -119,6 +119,11 @@ file=			KERNEL_DIR\DEBUG_DIR\svphostfs.exe			sys\bin\svphostfs.exe
 extension[VARID]=	KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_svpsnapdriver.ldd	sys\bin\svpsnapdriver.ldd
 file=			KERNEL_DIR\DEBUG_DIR\snapapp.exe			sys\bin\snapapp.exe
 
+// Webcamera Driver
+device[VARID]=		KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_webcamera.pdd	sys\bin\webcamera.pdd
+device[VARID]=		KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_ewebcamera.ldd	sys\bin\ewebcamera.ldd
+file=			KERNEL_DIR\DEBUG_DIR\webcamera_app.exe			sys\bin\webcamera_app.exe
+
 // Estart drive mapping setup files.
 data=			EPOCROOT##epoc32\rom\syborg\estart.txt			\sys\data\estart.txt
 

@@ -51,7 +51,9 @@ KHwBaseSnap		EQU     KHwBaseRegisters + 0x0b000
 KHwBaseNet		EQU     KHwBaseRegisters + 0x0c000
 KHwBaseNand		EQU     KHwBaseRegisters + 0x0d000
 KHwBaseAudio		EQU     KHwBaseRegisters + 0x0e000
-KHwBasePlatform		EQU     KHwBaseRegisters + 0x0f000
+KHwBaseWebcamera	EQU     KHwBaseRegisters + 0x0f000
+KHwBasePlatform		EQU     KHwBaseRegisters + 0x10000
+
 ;-----------------------------------------------------------------------------
 ; Module linear bases
 ;-----------------------------------------------------------------------------
@@ -76,6 +78,7 @@ KHwLinBaseSnap		EQU	KHwLinBaseRegisters + 0x0b*KHwLinSeparation
 KHwLinBaseNet		EQU	KHwLinBaseRegisters + 0x0c*KHwLinSeparation
 KHwLinBaseNand		EQU	KHwLinBaseRegisters + 0x0d*KHwLinSeparation
 KHwLinBaseAudio		EQU	KHwLinBaseRegisters + 0x0e*KHwLinSeparation
-KHwLinBasePlatform	EQU	KHwLinBaseRegisters + 0x0f*KHwLinSeparation
+KHwLinBaseWebcameraDevice	EQU	KHwLinBaseRegisters + 0x0f*KHwLinSeparation
+KHwLinBasePlatform	EQU	KHwLinBaseRegisters + 0x10*KHwLinSeparation;
 	
 	END

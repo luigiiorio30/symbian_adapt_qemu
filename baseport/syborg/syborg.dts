@@ -115,9 +115,15 @@
             interrupts = <a>;
             interrupt-parent = <&intc>;
         };
+        usbtest@0 {
+            compatible = "syborg,usbtest";
+            reg = <c000f000>;
+            interrupts = <b>;
+            interrupt-parent = <&intc>;
+        };
         platform@0 {
             compatible = "syborg,platform";
-            reg = <c000f000>;
+            reg = <c0010000>;
         };
     };
 };

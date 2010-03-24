@@ -28,7 +28,8 @@ specific/syborg.cfg				/epoc32/rom/syborg/		//
 estart.txt						/epoc32/rom/syborg/		//
 syborg.dtb						/epoc32/rom/syborg/		//
 trk_l1.ini						/epoc32/data/Z/trk/trk_syborg.ini
-
+webcamera/webcamera_driver.h				/epoc32/include/syborg/
+webcamera/webcamera_driver.inl				/epoc32/include/syborg/
 specific/variantmediadef.h /epoc32/include/syborg/variantmediadef.h
 
 PRJ_EXTENSIONS
@@ -87,6 +88,11 @@ svpframebuffer/svpframebuffer
 
 //Add Sound Driver
 soundsc\soundsc
+
+//Webcamera Device
+webcamera/webcamera_pdd
+webcamera/webcamera_ldd
+webcamera/webcamera_app
 
 PRJ_EXTENSIONS
 start		extension		base/config
