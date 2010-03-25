@@ -48,10 +48,13 @@ if (Profiler::Start() == KErrNotFound)
 			rect.iTl.iY = row * KSize.iHeight;
 			rect.SetSize(KSize);
 			color = !color;
-			gc->SetBrushColor(color? KRgbGray : KRgbBlack);
+			gc->SetBrushColor(color? KRgbBlue : KRgbBlack);
 			gc->DrawRect(rect);
 			}
 	}
+	
+	
+	
 	gc->Deactivate();
 	win.EndRedraw();
 	ws.Flush();

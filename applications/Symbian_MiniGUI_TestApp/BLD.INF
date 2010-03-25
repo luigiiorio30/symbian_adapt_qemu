@@ -12,10 +12,12 @@
 
 PRJ_PLATFORMS
 ARMV5
+WINSCW
 
 PRJ_EXPORTS
 grid.iby \epoc32\rom\include\grid.iby
+yuv.iby \epoc32\rom\include\yuv.iby
 
 PRJ_MMPFILES
 grid
-
+yuv

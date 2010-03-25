@@ -12,12 +12,12 @@
 *
 *******************************************************************************/
 
-TARGET			grid.EXE
-TARGETTYPE		EXE
-SOURCEPATH		.
-SOURCE			grid.cpp
+#ifndef __SYMBIANMINIGUI_TESTAPP_IBY__
+#define __SYMBIANMINIGUI_TESTAPP_IBY__
 
-#include <platform_paths.hrh>
-OS_LAYER_SYSTEMINCLUDE
 
-LIBRARY			efsrv.lib euser.lib hal.lib ws32.lib 
+//demo app which requests a YUV format surface
+file=\epoc32\release\armv5\urel\yuv.exe sys\bin\yuv.exe
+
+
+#endif
