@@ -50,7 +50,8 @@ if (Profiler::Start() == KErrNotFound)
 			rect.iTl.iY = row * KSize.iHeight;
 			rect.SetSize(KSize);
 			color = !color;
-			gc->SetBrushColor(color? KRgbGreen : KRgbBlack);
+			// Semitransparent green or black
+			gc->SetBrushColor(color? TRgb(0x00ff00, 30) : TRgb(0x000000, 30));
 			gc->DrawRect(rect);
 			}
 	}
@@ -94,6 +95,7 @@ if (Profiler::Start() == KErrNotFound)
 	    surfaceManager.SurfaceInfo(surfaceId, buf); 
 	    }
 
+	
 	
 	win.SetBackgroundSurface(surfaceId);
 	gc->Deactivate();
