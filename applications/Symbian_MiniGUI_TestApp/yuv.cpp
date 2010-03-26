@@ -63,10 +63,10 @@ if (Profiler::Start() == KErrNotFound)
 	RSurfaceManager::TSurfaceCreationAttributesBuf buf;
 	RSurfaceManager::TSurfaceCreationAttributes& attributes = buf();
 
-	attributes.iSize = TSize(361,341);      // w > 0, h > 0
+	attributes.iSize = TSize(320, 240);      // w > 0, h > 0
 	attributes.iBuffers = 4;                // > 0, <= 4
-	attributes.iPixelFormat = EUidPixelFormatYUV_422Planar; // 2bpp
-	attributes.iStride = 1400;              // > 0,  width * bpp
+	attributes.iPixelFormat = EUidPixelFormatYUV_422Interleaved; // 1bpp
+	attributes.iStride = 320;              // > 0,  width * bpp
 	attributes.iOffsetToFirstBuffer = 184;  // > 0, divisible by alignment
 	attributes.iAlignment = 4;              // 1 || 2 || 4 || 8
 	attributes.iContiguous = EFalse;
@@ -102,6 +102,8 @@ if (Profiler::Start() == KErrNotFound)
 	win.EndRedraw();
 	ws.Flush();
  	User::After(3000000);
+ 	
+ 	win.RemoveBackgroundSurface(ETrue);
  	win.Close();
 	grp.Close();
 	delete gc;
