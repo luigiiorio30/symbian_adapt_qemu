@@ -50,8 +50,8 @@ const TUint KHwSVPSnapDevice			= KHwBasePeripherals + 0x0b*KHwLinSeparation;
 const TUint KHwSVPNetDevice			= KHwBasePeripherals + 0x0c*KHwLinSeparation;
 const TUint KHwSVPNandDevice			= KHwBasePeripherals + 0x0d*KHwLinSeparation;
 const TUint KHwSVPAudioDevice			= KHwBasePeripherals + 0x0e*KHwLinSeparation;
-const TUint KHwSVPPlatformDevice		= KHwBasePeripherals + 0x0f*KHwLinSeparation;
-
+const TUint KHwSVPWebcameraDevice		= KHwBasePeripherals + 0x0f*KHwLinSeparation;
+const TUint KHwSVPPlatformDevice		= KHwBasePeripherals + 0x10*KHwLinSeparation;
 	
 enum TSyborgInterruptId
 {
