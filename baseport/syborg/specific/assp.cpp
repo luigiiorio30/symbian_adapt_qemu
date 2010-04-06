@@ -10,6 +10,7 @@
 * Nokia Corporation - initial contribution.
 *
 * Contributors:
+* NTT Docomo, Inc : BUG 1296
 *
 * Description: implementation of class Syborg
 *
@@ -263,7 +264,7 @@ EXPORT_C void Syborg::DebugOutput(TUint aLetter)
 
 EXPORT_C TInt Syborg::MsTickPeriod()
 {
-	return 1000;
+	return KMsTickPeriod;
 }
 
 EXPORT_C TInt Syborg::SystemTimeInSecondsFrom2000(TInt& aTime)

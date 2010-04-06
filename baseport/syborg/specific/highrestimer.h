@@ -10,6 +10,7 @@
 * Nokia Corporation - initial contribution.
 *
 * Contributors:
+* NTT Docomo, Inc : BUG 1296
 *
 * Description:
 *
@@ -50,7 +51,7 @@
 // Hi-jacking r10 for tmp, not good if Rd is R10 -- grepping the the kernel shows it's not (for now)
 #define GET_HIGH_RES_TICK_COUNT(Rd)						         \
   asm("push {r10}");										     \
-  asm("mov r10, #2");										     \
+  asm("mov r10, #1");										     \
   asm("ldr "#Rd", =%a0"               : : "i" (KHwBaseRtc + 4)); \
   asm("str r10, ["#Rd", #%a0]"        : : "i" (0));			     \
   asm("pop {r10}");                                              \
