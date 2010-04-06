@@ -32,7 +32,7 @@
         timer@0 {
             compatible = "syborg,timer";
             reg = <c0002000>;
-            frequency = <d#1000000>;
+            frequency = <d#0100000>;
             interrupts = <1>;
             interrupt-parent = <&intc>;
         };
