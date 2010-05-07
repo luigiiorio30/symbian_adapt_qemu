@@ -14,5 +14,5 @@ TARGET			SYMBIANLOGO.EXE
 TARGETTYPE		EXE
 SOURCEPATH		.
 SOURCE			symbianlogo.cpp
-SYSTEMINCLUDE		\epoc32\include
+OS_LAYER_SYSTEMINCLUDE
 LIBRARY			efsrv.lib euser.lib hal.lib estor.lib 

@@ -7,7 +7,7 @@ EMachineUid=OmapH4
 EDeviceFamily=crystal
 EDeviceFamilyRev=0x001
 ECPU=arm
-ECPUArch=0x400
+ECPUArch=0xC0
 ECPUABI=arm5
 ECPUSpeed=0
 ESystemStartupReason=cold
@@ -34,7 +34,7 @@ EDebugPort=0
 EClipboardDrive=2
 ESystemDrive=0xffff
 EDisplayNumberOfScreens=1
-ENanoTickPeriod=1000
+ENanoTickPeriod=10000
 EFastCounterFrequency=1000000
 EFastCounterCountsUp=1
 

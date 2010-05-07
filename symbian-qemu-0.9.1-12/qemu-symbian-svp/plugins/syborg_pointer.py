@@ -1,3 +1,8 @@
+#
+# Contributors:
+# NTT DOCOMO, INC. -- Syborg QEMU crashes when using skin + touchscreen device
+#
+
 import qemu
 
 class syborg_pointer(qemu.devclass):
@@ -32,7 +37,7 @@ class syborg_pointer(qemu.devclass):
     self.fifo=[]
     self.current = self.fifo_entry(0, 0, 0, 0)
     self.int_enabled = False
-    qemu.register_mouse(self.event, self.absolute)
+    qemu.register_mouse(self.event, self.absolute, self.name)
 
   def read_reg(self, offset):
     offset >>= 2

@@ -182,6 +182,7 @@ GetHwBanks	ROUT
 		HW_MAPPING		KHwBaseNet,			1,	HW_MULT_4K
 		HW_MAPPING		KHwBaseNand,    		1,	HW_MULT_4K
 		HW_MAPPING		KHwBaseAudio,    		1,	HW_MULT_4K
+		HW_MAPPING		KHwBaseWebcamera,    		1,	HW_MULT_4K
 		HW_MAPPING		KHwBasePlatform,    		8,	HW_MULT_4K
 	
 		DCD     0   ; terminator

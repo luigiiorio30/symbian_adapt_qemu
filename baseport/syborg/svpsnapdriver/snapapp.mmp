@@ -20,7 +20,7 @@ TARGETTYPE	   EXE
 SOURCEPATH	   src
 SOURCE         snapapp.cpp rsvpsnapdriver.cpp
 LIBRARY        euser.lib efsrv.lib
-SYSTEMINCLUDE  /epoc32/include 
+OS_LAYER_SYSTEMINCLUDE  
 
 CAPABILITY		TCB DISKADMIN ALLFILES
 VENDORID 0x70000001

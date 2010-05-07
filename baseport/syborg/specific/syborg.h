@@ -10,6 +10,7 @@
 * Nokia Corporation - initial contribution.
 *
 * Contributors:
+* NTT Docomo, Inc : BUG 1296
 *
 * Description:
 *
@@ -31,6 +32,7 @@
 
 const TUint KHwBasePeripherals  = KPrimaryIOBase;       
 const TUint KHwLinSeparation	= 0x1000;
+const TInt KMsTickPeriod	= 10000;
 
 const TUint KHwBaseSic				= KHwBasePeripherals + 0x00*KHwLinSeparation;
 // intended for use as a free-running counter. Reading the value register of a free-running syborg counter returns a microsec value
@@ -50,8 +52,8 @@ const TUint KHwSVPSnapDevice			= KHwBasePeripherals + 0x0b*KHwLinSeparation;
 const TUint KHwSVPNetDevice			= KHwBasePeripherals + 0x0c*KHwLinSeparation;
 const TUint KHwSVPNandDevice			= KHwBasePeripherals + 0x0d*KHwLinSeparation;
 const TUint KHwSVPAudioDevice			= KHwBasePeripherals + 0x0e*KHwLinSeparation;
-const TUint KHwSVPPlatformDevice		= KHwBasePeripherals + 0x0f*KHwLinSeparation;
-
+const TUint KHwSVPWebcameraDevice		= KHwBasePeripherals + 0x0f*KHwLinSeparation;
+const TUint KHwSVPPlatformDevice		= KHwBasePeripherals + 0x10*KHwLinSeparation;
 	
 enum TSyborgInterruptId
 {

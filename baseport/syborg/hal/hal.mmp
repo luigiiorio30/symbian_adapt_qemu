@@ -28,7 +28,7 @@ SOURCE			hal_main.cpp userhal.cpp
 SOURCEPATH		/epoc32/build/generatedcpp/hal
 SOURCE			VariantTarget(values,cpp) VariantTarget(config,cpp)
 
-SYSTEMINCLUDE	/epoc32/include /epoc32/include/kernel
+OS_LAYER_SYSTEMINCLUDE
 
 LIBRARY			euser.lib
 DEFFILE			../../../../../os/kernelhwsrv/halservices/hal/~/hal.def

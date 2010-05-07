@@ -24,6 +24,7 @@ NOSTRICTDEF
 
 SYSTEMINCLUDE	inc	
 SYSTEMINCLUDE	/epoc32/include 
+OS_LAYER_SYSTEMINCLUDE
 
 LIBRARY			efsrv.lib euser.lib hal.lib
 LIBRARY			efile.lib

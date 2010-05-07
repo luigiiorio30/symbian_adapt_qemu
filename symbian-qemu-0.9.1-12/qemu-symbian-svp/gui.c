@@ -20,6 +20,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ *
+ * Contributors:
+ * NTT DOCOMO, INC. -- Clicking a QEMU skin button causes screen flicker on the display area
+ *
  */
 
 #include "hw/hw.h"
@@ -1608,13 +1612,14 @@ static void gui_loaded_notify_mouse_button(int dz, int x, int y, int state)
                 if (carea->type == CA_BUTTON) {
                     if (state == MOUSE_EVENT_LBUTTON) {
                         if (gui_data->current_vt->buttons[carea->id].pressed_img_id > 0)
-                            gui_show_image(current_vt_id(),
+							gui_show_image(current_vt_id(),
                                            gui_data->current_vt->buttons[carea->id].pressed_img_id);
 
                         button_actions[gui_data->current_vt->buttons[carea->id].actions].down(gui_data->current_vt->buttons[carea->id].parameter);
                     } else {
-                        gui_hide_image(current_vt_id(),
-                                       gui_data->current_vt->buttons[carea->id].pressed_img_id);
+                        if (gui_data->current_vt->buttons[carea->id].pressed_img_id > 0)
+							gui_hide_image(current_vt_id(),
+											gui_data->current_vt->buttons[carea->id].pressed_img_id);
                         button_actions[gui_data->current_vt->buttons[carea->id].actions].up(gui_data->current_vt->buttons[carea->id].parameter);
                     }
                 } else { /* pointerarea*/

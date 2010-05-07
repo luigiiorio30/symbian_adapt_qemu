@@ -20,7 +20,8 @@ ARMV5
 
 PRJ_EXPORTS
 syborg.oby						/epoc32/rom/include/	//
-base.iby						/epoc32/rom/include/	//
+//MattD - don't export the base.iby as you end up fighting with the kernel and everyone else...
+//base.iby						/epoc32/rom/include/	//
 rom/base_syborg.iby				/epoc32/rom/include/	//
 rom/header.iby					/epoc32/rom/syborg/		//
 rom/kernel.iby					/epoc32/rom/syborg/		//
@@ -28,7 +29,8 @@ specific/syborg.cfg				/epoc32/rom/syborg/		//
 estart.txt						/epoc32/rom/syborg/		//
 syborg.dtb						/epoc32/rom/syborg/		//
 trk_l1.ini						/epoc32/data/Z/trk/trk_syborg.ini
-
+webcamera/webcamera_driver.h				/epoc32/include/syborg/
+webcamera/webcamera_driver.inl				/epoc32/include/syborg/
 specific/variantmediadef.h /epoc32/include/syborg/variantmediadef.h
 
 PRJ_EXTENSIONS
@@ -87,6 +89,11 @@ svpframebuffer/svpframebuffer
 
 //Add Sound Driver
 soundsc\soundsc
+
+//Webcamera Device
+webcamera/webcamera_pdd
+webcamera/webcamera_ldd
+webcamera/webcamera_app
 
 PRJ_EXTENSIONS
 start		extension		base/config

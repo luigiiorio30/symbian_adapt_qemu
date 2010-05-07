@@ -1,3 +1,10 @@
+/*
+*
+* Contributors:
+* NTT DOCOMO, INC. -- Syborg QEMU crashes when using skin + touchscreen device
+*
+*/
+
 #include "Python.h"
 #include "structmember.h"
 #include "hw/hw.h"
@@ -1862,11 +1869,12 @@ static void qemu_py_mouse_event(void *opaque, int dx, int dy, int dz,
 static PyObject *qemu_py_register_mouse(PyObject *self, PyObject *args,
                                         PyObject *kwds)
 {
-    static char *kwlist[] = {"handler", "absolute", NULL};
+    static char *kwlist[] = {"handler", "absolute", "devid", NULL};
     PyObject *fn;
     int absolute;
+	char *devid;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Oi", kwlist, &fn, &absolute))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Ois", kwlist, &fn, &absolute, &devid))
         return NULL; 
 
     if (!PyCallable_Check(fn)) {
@@ -1875,7 +1883,7 @@ static PyObject *qemu_py_register_mouse(PyObject *self, PyObject *args,
     }
 
     Py_INCREF(fn);
-    gui_register_mouse_event_handler(qemu_py_mouse_event, fn, absolute, "dev");
+    gui_register_mouse_event_handler(qemu_py_mouse_event, fn, absolute, devid);
 
     Py_RETURN_NONE;
 }

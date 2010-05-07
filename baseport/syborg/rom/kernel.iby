@@ -63,6 +63,11 @@ file=				\epoc32\release\##KMAIN##\##BUILD##\_##VARIANT##_e32strt.exe		sys\bin\e
 extension[VARID]=	\epoc32\release\##KMAIN##\##BUILD##\_##VARIANT##_svpsnapdriver.ldd  \sys\bin\svpsnapdriver.ldd
 file=			\epoc32\release\##KMAIN##\##BUILD##\snapapp.exe			\sys\bin\snapapp.exe
 
+// Webcamera Driver
+device[VARID]=		\epoc32\release\##KMAIN##\##BUILD##\_##VARIANT##_webcamera.PDD    	\sys\bin\webcamera.PDD
+device[VARID]=		\epoc32\release\##KMAIN##\##BUILD##\_##VARIANT##_ewebcamera.LDD    	\sys\bin\ewebcamera.LDD
+file=			\epoc32\release\##KMAIN##\##BUILD##\webcamera_app.exe			\sys\bin\webcamera_app.exe
+
 // Estart
 data=               	\epoc32\rom\syborg\ESTART.TXT					    \sys\data\ESTART.TXT
 
