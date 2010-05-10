@@ -1429,8 +1429,49 @@ static int win_chr_init(CharDriverState *chr, const char *filename)
     size = sizeof(COMMCONFIG);
     GetDefaultCommConfig(filename, &comcfg, &size);
     comcfg.dcb.DCBlength = sizeof(DCB);
-    CommConfigDialog(filename, NULL, &comcfg);
-
+    //CommConfigDialog(filename, NULL, &comcfg);
+    int autoconfigure = 0;
+    
+    FILE* handleF = fopen("\\flag_autoserialconfig.txt", "r");
+    
+    if (handleF) {
+        autoconfigure = 1;
+        fclose(handleF);
+    }
+    
+    if (!autoconfigure) {
+        CommConfigDialog(filename, NULL, &comcfg);
+    }
+    else {
+       comcfg.dcb.BaudRate = CBR_115200;
+       comcfg.dcb.fBinary = 0;
+       comcfg.dcb.fParity = 0;
+       comcfg.dcb.fOutxCtsFlow = 0;
+       comcfg.dcb.fOutxDsrFlow = 0;
+       comcfg.dcb.fDtrControl = 1;
+       comcfg.dcb.fDsrSensitivity = 0;
+       comcfg.dcb.fTXContinueOnXoff = 0;
+       comcfg.dcb.fOutX = 0;
+       comcfg.dcb.fInX = 0;
+       comcfg.dcb.fErrorChar = 0;
+       comcfg.dcb.fNull = 0;
+       comcfg.dcb.fRtsControl = 0;
+       comcfg.dcb.fAbortOnError = 0;
+       comcfg.dcb.fDummy2 = 0;
+       comcfg.dcb.wReserved = 0;
+       comcfg.dcb.XonLim = 0;
+       comcfg.dcb.XoffLim = 0;
+       comcfg.dcb.ByteSize = 8;
+       comcfg.dcb.Parity = 0;
+       comcfg.dcb.StopBits = 0;
+       comcfg.dcb.XonChar = 0;
+       comcfg.dcb.XoffChar = 0;
+       comcfg.dcb.ErrorChar = 0;
+       comcfg.dcb.EofChar = 0;
+       comcfg.dcb.EvtChar = 0;
+       comcfg.dcb.wReserved1 = 0;
+    }
+    
     if (!SetCommState(s->hcom, &comcfg.dcb)) {
         fprintf(stderr, "Failed SetCommState\n");
         goto fail;
