@@ -59,7 +59,8 @@ enum RunType
 enum StreamDirection
 	{
 	EDirectionPlayback = 0,
-	EDirectionRecord = 1
+	EDirectionRecord = 1,
+    EDirectionNone = 2 // closes current stream
 	};
 
 struct TCommand

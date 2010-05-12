@@ -34,8 +34,8 @@
 #include <assp.h>
 
 
-#ifdef _ENABLE_SYBORG_VIRTIO_DEBUG
-#define SYBORG_VIRTIO_DEBUG(x...) Kern::Printf(x)
+#ifndef DISABLE_SYBORG_SOUND_DEBUG
+#define SYBORG_VIRTIO_DEBUG(x...) __KTRACE_OPT(KSOUND1, Kern::Printf(x))
 #else
 #define SYBORG_VIRTIO_DEBUG(x...)
 #endif

@@ -39,6 +39,9 @@ do { fprintf(stderr, "virtio-audio: error: " fmt , ##args);} while (0)
 
 #define NUM_STREAMS 2
 
+#define VIRT_CONTROL_QUEUE_SIZE 0x40
+#define VIRT_DATA_QUEUE_SIZE 0x80
+
 typedef struct {
     struct VirtIOAudio *dev;
     VirtQueue *data_vq;
@@ -97,9 +100,13 @@ static int virtio_audio_fill(VirtIOAudioStream *stream,
     if (stream->in_voice) {
         iov_len = stream->elem.in_num;
         iov = stream->elem.in_sg;
-    } else {
+    } else if (stream->out_voice) {
         iov_len = stream->elem.out_num;
         iov = stream->elem.out_sg;
+    } else
+    {
+        DPRINTF("No voice selected skipping block\n");
+        return 0;
     }
     written = 0;
     for (n = 0; total_len > 0 && n < iov_len; n++) {
@@ -119,8 +126,10 @@ static int virtio_audio_fill(VirtIOAudioStream *stream,
         while (to_write) {
             if (stream->in_voice) {
                 size = AUD_read(stream->in_voice, p, to_write);
-            } else {
+            } else if (stream->out_voice) {
                 size = AUD_write(stream->out_voice, p, to_write);
+            } else {
+                size = 0;
             }
             DPRINTF("Copied %d/%d\n", size, to_write);
             if (size == 0) {
@@ -141,10 +150,14 @@ static void virtio_audio_callback(void *opaque, int avail)
     int n;
 
     DPRINTF("Callback (%d)\n", avail);
+    if ((!stream->in_voice)&&(!stream->out_voice))
+    {
+        DPRINTF("Skipping callback as no voice is selected!\n");
+    }
     while (avail) {
         while (stream->data_left == 0) {
             if (stream->has_buffer) {
-                virtqueue_push(stream->data_vq, &stream->elem, 0);
+                virtqueue_push(stream->data_vq, &stream->elem, stream->data_offset);
                 virtio_notify(&stream->dev->vdev, stream->data_vq);
                 stream->has_buffer = 0;
             }
@@ -160,7 +173,7 @@ static void virtio_audio_callback(void *opaque, int avail)
             if (stream->in_voice) {
                 for (n = 0; n < stream->elem.in_num; n++)
                     stream->data_left += stream->elem.in_sg[n].iov_len;
-            } else {
+            } else if (stream->out_voice) {
                 for (n = 0; n < stream->elem.out_num; n++)
                     stream->data_left += stream->elem.out_sg[n].iov_len;
             }
@@ -175,7 +188,7 @@ static void virtio_audio_callback(void *opaque, int avail)
             break;
     }
     if (stream->data_left == 0 && stream->has_buffer) {
-        virtqueue_push(stream->data_vq, &stream->elem, 0);
+        virtqueue_push(stream->data_vq, &stream->elem, stream->data_offset);
         virtio_notify(&stream->dev->vdev, stream->data_vq);
         stream->has_buffer = 0;
     }
@@ -220,6 +233,7 @@ static void virtio_audio_handle_cmd(VirtIODevice *vdev, VirtQueue *vq)
     uint32_t value;
 
     while (virtqueue_pop(s->cmd_vq, &elem)) {
+        size_t bytes_transferred = 0;
         for (out_n = 0; out_n < elem.out_num; out_n++) {
             p = (uint32_t *)elem.out_sg[out_n].iov_base;
             len = elem.out_sg[out_n].iov_len;
@@ -249,7 +263,8 @@ static void virtio_audio_handle_cmd(VirtIODevice *vdev, VirtQueue *vq)
                     stream->fmt.freq = value;
                     break;
                 case VIRTIO_AUDIO_CMD_INIT:
-                    if (value & 1) {
+                    out_bytes = 0;
+                    if (value == 1) {
                         if (stream->out_voice) {
                             AUD_close_out(&s->card, stream->out_voice);
                             stream->out_voice = NULL;
@@ -261,8 +276,8 @@ static void virtio_audio_handle_cmd(VirtIODevice *vdev, VirtQueue *vq)
                                       virtio_audio_callback,
                                       &stream->fmt);
                         virtio_audio_cmd_result(0, &elem, &out_bytes);
-                    } else {
-                        if (stream->out_voice) {
+                    } else if (value == 0) {
+                        if (stream->in_voice) {
                             AUD_close_in(&s->card, stream->in_voice);
                             stream->in_voice = NULL;
                         }
@@ -274,21 +289,36 @@ static void virtio_audio_handle_cmd(VirtIODevice *vdev, VirtQueue *vq)
                                        &stream->fmt);
                         value = AUD_get_buffer_size_out(stream->out_voice);
                         virtio_audio_cmd_result(value, &elem, &out_bytes);
+                    } else { // let us close all down
+                        if (stream->out_voice) {
+                            AUD_close_out(&s->card, stream->out_voice);
+                            stream->out_voice = NULL;
+                        }
+                        if (stream->in_voice) {
+                            AUD_close_in(&s->card, stream->in_voice);
+                            stream->in_voice = NULL;
+                        }                        
                     }
+                    bytes_transferred += out_bytes;
                     break;
                 case VIRTIO_AUDIO_CMD_RUN:
                     if (stream->in_voice) {
                         AUD_set_active_in(stream->in_voice, value);
-                    } else {
+                    } else if (stream->out_voice) {
                         AUD_set_active_out(stream->out_voice, value);
+                    } else
+                    {
+                        DPRINTF("Cannot execute CMD_RUN as no voice is active\n");
                     }
                     break;
                 }
                 p += 3;
                 len -= 12;
+                bytes_transferred += 12;
             }
         }
-        virtqueue_push(s->cmd_vq, &elem, out_bytes);
+        virtqueue_push(s->cmd_vq, &elem, bytes_transferred);
+        virtio_notify(vdev, s->cmd_vq);		
     }
 }
 
@@ -314,7 +344,7 @@ static void virtio_audio_save(QEMUFile *f, void *opaque)
             if (AUD_is_active_in(stream->in_voice))
                 mode |= 1;
         } else if (stream->out_voice) {
-            mode |= 4;
+            mode = 4;
             if (AUD_is_active_out(stream->out_voice))
                 mode |= 1;
         } else {
@@ -394,9 +424,9 @@ void virtio_audio_init(VirtIOBindFn bind, void *bind_arg, AudioState *audio)
     s->vdev.get_config = virtio_audio_get_config;
     s->vdev.get_features = virtio_audio_get_features;
     s->vdev.set_features = virtio_audio_set_features;
-    s->cmd_vq = virtio_add_queue(&s->vdev, 64, virtio_audio_handle_cmd);
+    s->cmd_vq = virtio_add_queue(&s->vdev, VIRT_CONTROL_QUEUE_SIZE, virtio_audio_handle_cmd);
     for (i = 0; i < NUM_STREAMS; i++) {
-        s->stream[i].data_vq = virtio_add_queue(&s->vdev, 128,
+        s->stream[i].data_vq = virtio_add_queue(&s->vdev, VIRT_DATA_QUEUE_SIZE,
                                                 virtio_audio_handle_data);
         s->stream[i].dev = s;
     }

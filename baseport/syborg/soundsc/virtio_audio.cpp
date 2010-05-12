@@ -20,6 +20,40 @@ namespace VirtIo
 namespace Audio
 {
 
+static TBool CheckProcessing( TAny* aSelf )
+	{
+	MQueue* queue = reinterpret_cast<MQueue*>( aSelf );
+	return queue->Processing() == 0;
+	}
+
+static void WaitForCompletion( MQueue& aQueue )
+	{
+	SYBORG_VIRTIO_DEBUG("AddBufferHelperWaitForCompletion : {");
+
+	TInt st = Kern::PollingWait( &CheckProcessing, &aQueue, 50, 100 );
+	ASSERT ( (st == KErrNone) && "Polling problem" )
+	
+	SYBORG_VIRTIO_DEBUG("AddBufferHelperWaitForCompletion : }");
+	}
+
+static void AddBufferHelper( MQueue& aQueue, TAddrLen aList[], TUint aBufInCount, TUint aBufOutCount, Token aToken)
+	{
+	TInt st = aQueue.AddBuf(aList, aBufInCount, aBufOutCount, aToken );
+	if ( st == KErrNotReady )
+		{
+		SYBORG_VIRTIO_DEBUG("AddBufferHelper - no free descriptors at Control Queue, forcing wait");
+		TUint transferred;
+		Token t;
+		while ( ( t = aQueue.GetBuf(transferred), t ) != 0 )
+			{
+			SYBORG_VIRTIO_DEBUG("flushing Q%x, T%x, L%x\n", 0, t, transferred );
+			}
+			
+		st = aQueue.AddBuf(aList, aBufInCount, aBufOutCount, aToken ); 
+		}
+	ASSERT( st == KErrNone );
+	}
+
 DControl::~DControl()
 	{
 	if (iCmdMem)
@@ -62,32 +96,44 @@ TInt DControl::Construct()
 	iCmd[7].iArg = Audio::EDoStop; //kind of pause
 	iCmd[8].iCommand = Audio::ECmdRun;
 	iCmd[8].iArg = Audio::EDoRun; //kind of resume
+	iCmd[9].iCommand = Audio::ECmdInit; // kind of shutdown
+    iCmd[9].iArg = EDirectionNone;
 	return KErrNone;
 	}
 
 TInt DControl::Setup( StreamDirection aDirection, TInt aChannelNum, 
 	FormatId aFormat, TInt aFreq)
 	{
+    if (iIsRunning 
+        && (( aDirection != iDirection ) 
+            || (aFormat != iCmd[2].iArg )
+            || (aFreq != iCmd[3].iArg )
+            || (aChannelNum != iCmd[1].iArg )
+        ))
+        { return KErrInUse; }
+
 	iCmd[1].iArg = aChannelNum;
 	iCmd[2].iArg = aFormat;
 	iCmd[3].iArg = aFreq;		
-	iCmd[4].iArg = iDirection = aDirection;		
-	AddCommand(&iCmd[0],(Token)0);
+	iCmd[4].iArg = iDirection = aDirection;
 	AddCommand(&iCmd[1],(Token)1);
 	AddCommand(&iCmd[2],(Token)2);
 	AddCommand(&iCmd[3],(Token)3);
-	AddCommand(&iCmd[4],(Token)4, iBufferInfo, sizeof(*iBufferInfo) );
+    if (!iIsRunning) {
+            AddCommand(&iCmd[4],(Token)4, iBufferInfo, sizeof(*iBufferInfo) );
+            AddCommand(&iCmd[6],(Token)6);
+        }
 	ControlQueue().Sync();
 	return KErrNone;
 	}
-	
+
 void DControl::AddCommand( TCommandPadded* aCmd, Token aToken )
 	{
 	TAddrLen list;
 	list.iLen = sizeof(TCommand);
 	list.iAddr = Epoc::LinearToPhysical((TUint32)aCmd);
 	SYBORG_VIRTIO_DEBUG("AddCommand %x %x %x", aCmd->iCommand, aCmd->iStream, aCmd->iArg);
-	ControlQueue().AddBuf(&list, 1, 0, aToken );
+	AddBufferHelper( ControlQueue(), &list, 1, 0, aToken );
 	}
 
 void DControl::AddCommand( TCommandPadded* aCmd, Token aToken, 
@@ -98,41 +144,25 @@ void DControl::AddCommand( TCommandPadded* aCmd, Token aToken,
 	list[0].iAddr = Epoc::LinearToPhysical((TUint32)aCmd);
 	list[1].iLen = aSize;
 	list[1].iAddr = Epoc::LinearToPhysical((TUint32)aMem);
-	ControlQueue().AddBuf(list, 1, 1, aToken );
-	}
-	
-	
-// Waits until device processes all pending requests
-// there would be no need to have it here at all 
-// if there was no bug in qemu:
-// once you send stop command the buffers processing stops... but the buffers are never returned.
-
-void DControl::WaitForCompletion()
-	{
-	SYBORG_VIRTIO_DEBUG("DControl::WaitForCompletion : {");
-
-	TInt st = Kern::PollingWait( &DControl::CheckProcessing, this, 10, 100 );
-	ASSERT ( (st == KErrNone) && "Polling problem" )
-	
-	SYBORG_VIRTIO_DEBUG("DControlWaitForCompletion : }");
+	AddBufferHelper( ControlQueue(),list, 1, 1, aToken );
 	}
 
-TBool DControl::CheckProcessing( TAny* aSelf )
-	{
-	DControl* self = reinterpret_cast<DControl*>( aSelf );
-	return self->DataQueue().Processing() == 0;
-	}
-	
 void DControl::AddCommand( Command aCmd )
 	{
 	TUint idx = aCmd;
-	if (aCmd == EStop)
+	if ( (aCmd == EStop) || (aCmd == EShutDown) )
 		{
 		// due to bug on qemu's side we need to stop sending buffers
 		// and wait for all pending buffers to get filled...
-		WaitForCompletion();
-		}
+		WaitForCompletion(DataQueue());
+        WaitForCompletion(ControlQueue());
+        iIsRunning = 0;
+        }
 	AddCommand(&iCmd[idx], (Token)idx );
+    if (aCmd == ERun )
+        {
+        iIsRunning = 1;
+        }
 	}
 
 TInt DControl::SendDataBuffer( TAny* virtaulAddr, TUint aSize, Token aToken )

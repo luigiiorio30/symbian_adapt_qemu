@@ -128,7 +128,7 @@ void DIoHandler::WaitForCompletion()
 	{
 	SYBORG_VIRTIO_DEBUG("WaitForCompletion : {");
 
-	TInt st = Kern::PollingWait( &DIoHandler::CheckProcessing, this, 10, 100 );
+	TInt st = Kern::PollingWait( &DIoHandler::CheckProcessing, this, 50, 100 );
 
 	ASSERT( st == KErrNone );
 

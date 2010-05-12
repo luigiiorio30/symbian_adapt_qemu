@@ -15,7 +15,7 @@
 
 #include "virtio_queue.h"
 
-#define ENABLE_QEMU_AUDIO_MODEL_BUG_WORKAROUND
+// #define ENABLE_QEMU_AUDIO_MODEL_BUG_WORKAROUND
 #define ENABLE_QEMU_VIRTIO_CLEANUP_BUG_WORKAROUND
 #define PHYS_ADDR(x) Epoc::LinearToPhysical( reinterpret_cast<TUint32>(x))
 	
@@ -101,6 +101,7 @@ TInt DQueue::AddBuf( const TAddrLen aScatterList[], TUint32 aOutNum, TUint32 aIn
 		{
 		if (first>=0)
 			{ FreeDescs(first); }
+		SYBORG_VIRTIO_DEBUG("AddBuf Q%x - not ready", iId ); 			
 		return KErrNotReady;
 		}
 	iToken[first].iTotalLen = totalLen;
@@ -146,15 +147,16 @@ Token DQueue::GetBuf( TUint& aLen )
 	TUint len = iUsed->iRing[nextUsedSlot].iLen;
 	TUint descId = iUsed->iRing[nextUsedSlot].iId;
 	ASSERT(descId<iCount);
-	Token token = iToken[descId].iToken;	
-	TUint orderedLen = iToken[descId].iTotalLen;	
-	SYBORG_VIRTIO_DEBUG( "GetBuf Q%x %x ..%x t%x D%x L%x OL%x", iId, iNextUsedToRead, usedIdx, token, descId, len, orderedLen );
+	Token token = iToken[descId].iToken;		
+	SYBORG_VIRTIO_DEBUG( "GetBuf Q%x %x ..%x t%x D%x L%x OL%x", iId, iNextUsedToRead, usedIdx, token, descId, len, iToken[descId].iTotalLen );
 
 	++iNextUsedToRead;
 	FreeDescs( descId );
 	
 #ifdef ENABLE_QEMU_AUDIO_MODEL_BUG_WORKAROUND	
-	aLen = len?len:orderedLen; // @TODO kind of a hack to solve virtio-audio's failure to report len by syborg on the side of qemu
+	aLen = len?len:iToken[descId].iTotalLen; // @TODO kind of a hack to solve virtio-audio's failure to report len by syborg on the side of qemu
+#else
+    aLen = len;
 #endif
 	return token;
 	}	
@@ -208,10 +210,14 @@ void DQueue::DumpDescs(TUint descId )
 	{
 	do {
 		TRingDesc& d = iDesc[descId];
+        if ( (-1) == ((signed)d.iAddr) )
+            break;
 		SYBORG_VIRTIO_DEBUG(" Desc %x,addr %x, len %x, flags %x, next %x",
 			(TUint32)descId, (TUint32)d.iAddr, (TUint32)d.iLen, (TUint32)d.iFlags, (TUint32)d.iNext );
 		if ((d.iFlags&TRingDesc::EFlagNext)==0)
 			{ break; }
+        if ( KFreeDescriptorMarker == d.iNext )
+            break;
 		descId = d.iNext;
 		} while (ETrue);
 	}
@@ -235,8 +241,9 @@ void DQueue::FreeDescs( TUint firstDescIdx )
 		ASSERT( iToken[i].iToken == token );
 		iToken[i].iToken = 0;
 		iToken[i].iTotalLen = 0;
-		i = (flags&TRingDesc::EFlagNext)
-			? iDesc[i].iNext : -1;
+        if ((flags&TRingDesc::EFlagNext)==0)
+            break;
+		i = iDesc[i].iNext;
 		}
 	}		
 	
@@ -282,7 +289,7 @@ TInt DQueue::AllocQueue()
 	iAvailSize = sizeof(TRingAvail) + (iCount-1) * sizeof(((TRingAvail*)0)->iRing[0]);
 	iTokenSize = iCount * sizeof(TTransactionInfo);
 	TUint usedOffset = Align( iDescSize +  iAvailSize, KVirtIoAlignment );
-	TUint iUsedSize = sizeof(TRingUsed) + (iCount-1) * sizeof(((TRingUsed*)0)->iRing[0]);
+	iUsedSize = sizeof(TRingUsed) + (iCount-1) * sizeof(((TRingUsed*)0)->iRing[0]);
 	TUint size = usedOffset + iUsedSize;
 	TUint8* iMemAligned;
 
@@ -295,8 +302,8 @@ TInt DQueue::AllocQueue()
 	iAvail = reinterpret_cast<TRingAvail*>( iMemAligned + iDescSize );
 	iUsed = reinterpret_cast<TRingUsed*>( iMemAligned + usedOffset );
 	iToken = reinterpret_cast<TTransactionInfo*>( Kern::Alloc( iTokenSize ) );
-	SYBORG_VIRTIO_DEBUG("DQueue %d, Virt iDesc=%x,iAvail=%x,iToken=%x,iUsed=%x",
-		iId, iDesc, iAvail, iToken, iUsed );
+	SYBORG_VIRTIO_DEBUG("DQueue %d, Virt iDesc=%x/%x,iAvail=%x/%x,iToken=%x,iUsed=%x/%x",
+		iId, iDesc, iDescSize, iAvail, iAvailSize, iToken, iUsed, iUsedSize );
 	SYBORG_VIRTIO_DEBUG("DQueue %d, Phys iDesc=%x, iUsed=%x",
 		iId, PHYS_ADDR(iDesc), PHYS_ADDR(iUsed) );
 	ASSERT( ((PHYS_ADDR(iUsed)-PHYS_ADDR(iDesc))) == ((TUint32)((TUint8*)iUsed-(TUint8*)iDesc)) );
@@ -306,8 +313,8 @@ TInt DQueue::AllocQueue()
 void DQueue::PreInitQueue()
 	{
 	memset(iDesc, -1, iDescSize );
-	memset( ((TUint8*) iAvail) + 4, -1, iDescSize - 4 );
-	memset( ((TUint8*) iUsed) + 4, -1, iDescSize - 4 );
+	memset( ((TUint8*) iAvail) + 4, -1, iAvailSize - 4 );
+	memset( ((TUint8*) iUsed) + 4, -1, iUsedSize - 4 );
 	
 	iAvail->iFlags = 0; // no notifications from control queue
 	iUsed->iFlags = 0;

@@ -19,8 +19,8 @@
 
 #include <soundsc.h>
 
-#ifdef _ENABLE_SYBORG_AUDIO_DRIVER_DEBUG
-#define SYBORG_SOUND_DEBUG(x...) Kern::Printf(x)
+#ifndef DISABLE_SYBORG_SOUND_DEBUG
+#define SYBORG_SOUND_DEBUG(x...) __KTRACE_OPT(KSOUND1, Kern::Printf(x))
 #else
 #define SYBORG_SOUND_DEBUG(x...)
 #endif
@@ -33,7 +33,7 @@
 #include "virtio_audio_defs.h"
 
 /// @brief defines the maximum size for a single audio data transfer
-static const TInt KMaxTransferLength = 128 * 1024;
+static const TInt KMaxTransferLength = 256 * 1024;
 
 namespace VirtIo
 {

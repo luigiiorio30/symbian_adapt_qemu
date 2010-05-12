@@ -36,10 +36,10 @@ class DControl : public DBase
 	static const TUint KCmdMaxBufCount = 8;
 	static const TUint KControlQueueId = 0;
 public:
-	enum Command { ERun = 5, EStop, EPause, EResume };
+	enum Command { ERun = 5, EStop, EPause, EResume, EShutDown };
 	
 	DControl( VirtIo::MIoHandler& aIoHandler, TUint32 aDataQueueId )
-	: iIoHandler( aIoHandler ), iDataQueueId( aDataQueueId)
+	: iIoHandler( aIoHandler ), iDataQueueId( aDataQueueId), iIsRunning( 0 )
 		{}
 		
 	~DControl();
@@ -83,9 +83,6 @@ private:
 
 	void AddCommand( Command aCmd );
 
-	void WaitForCompletion();
-	static TBool CheckProcessing( TAny* aSelf );
-	
 	VirtIo::MIoHandler& iIoHandler;
 	TUint iDataQueueId;
 	
@@ -94,6 +91,8 @@ private:
 	TBufferInfo* iBufferInfo; // unmanaged
 	
 	StreamDirection iDirection;
+    
+    TUint iIsRunning;
 	};
 
 } // namespace Audio

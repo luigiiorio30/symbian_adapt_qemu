@@ -92,6 +92,11 @@ TInt DDriverSyborgSoundScPdd::DoCreate()
 	
 	iAudioControl = new Audio::DControl( *iIoHandler, iDataQueueId );
 	iAudioControl->Construct();
+	Audio::StreamDirection direction = static_cast<Audio::StreamDirection>(
+		(iUnitType == KSoundScRxUnit0)?Audio::EDirectionRecord
+		:(iUnitType == KSoundScTxUnit0)?Audio::EDirectionPlayback:-1 ); 
+        
+        iAudioControl->Setup( direction, 2, Audio::EFormatS16, 48000 );
 		
 	return KErrNone;
 	}
