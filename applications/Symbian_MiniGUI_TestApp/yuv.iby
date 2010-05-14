@@ -12,12 +12,13 @@
 *
 *******************************************************************************/
 
-#ifndef __SYMBIANMINIGUI_TESTAPP_IBY__
-#define __SYMBIANMINIGUI_TESTAPP_IBY__
+#ifndef __SYMBIANMINIGUI_TESTAPP_YUV_IBY__
+#define __SYMBIANMINIGUI_TESTAPP_YUV_IBY__
 
 
 //demo app which requests a YUV format surface
 file=\epoc32\release\armv5\urel\yuv.exe sys\bin\yuv.exe
 
 
-#endif
+#endif
+
