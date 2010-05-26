@@ -6,3 +6,4 @@ import syborg_timer
 import syborg_keyboard
 import syborg_pointer
 import syborg_usbtest
+import syborg_nvmemorydevice

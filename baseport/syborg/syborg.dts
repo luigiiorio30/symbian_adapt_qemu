@@ -121,9 +121,18 @@
             interrupts = <b>;
             interrupt-parent = <&intc>;
         };
+        nvmemorydevice@0 {
+            compatible = "syborg,nvmemorydevice";
+            drive_size = <4000000>;
+            sector_size = <200>;
+            drive_image_name = "syborg_system.img";
+            reg = <c0010000>;
+            interrupts = <c>;
+            interrupt-parent = <&intc>;
+        };
         platform@0 {
             compatible = "syborg,platform";
-            reg = <c0010000>;
+            reg = <c0011000>;
         };
     };
 };

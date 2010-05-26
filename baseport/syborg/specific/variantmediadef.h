@@ -20,8 +20,14 @@
 
 // Variant parameters for IRAM Media Driver (MEDINT.PDD)
 #define IRAM_DRIVECOUNT 1
-#define IRAM_DRIVELIST  0       // C:
+#define IRAM_DRIVELIST  0       // D:
 #define IRAM_NUMMEDIA   1	
 #define IRAM_DRIVENAME "IRam"
+
+// Variant parameters for non volatile memory Media Driver (MEDNVMEMORY.PDD)
+#define NVMEM1_DRIVECOUNT		1
+#define NVMEM1_DRIVELIST		1 // C:
+#define NVMEM1_NUMMEDIA         1	
+#define NVMEM1_DRIVENAME "NVMem"
 
 #endif  // __VARIANTMEDIADEF_H__
