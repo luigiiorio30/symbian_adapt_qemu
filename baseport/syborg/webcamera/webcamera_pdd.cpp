@@ -168,6 +168,7 @@ void DWebcameraDriver::receivedatacallback()
 		  break;
 	  default:
 		  //
+		  break;
 	  }
   WriteReg(iPortAddr,WEBCAMERA_REG_DMA_ADDR, 0);
   WriteReg(iPortAddr,WEBCAMERA_REG_DMA_SIZE, 0);
