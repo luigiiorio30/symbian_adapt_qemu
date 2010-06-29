@@ -111,11 +111,11 @@ void TPointerRv::Init3()
   iDisplayMode  = videoInfo.iDisplayMode;
 
   iVideoMem = videoInfo.iVideoAddress + videoInfo.iOffsetToFirstPixel;
-  iOffSetBetweenEachLine = 640;
+  iOffSetBetweenEachLine = iScreenWidth;
 
   ix = iy = 0;
 
-  iXFactor = Fixed(iScreenWidth) / Fixed(0x8000);
+  iXFactor = Fixed(iScreenWidth) / Fixed(0x6000);
   iYFactor = Fixed(iScreenHeight) / Fixed(0x8000);
 
   iFifoPos = iFifoCount = 0;

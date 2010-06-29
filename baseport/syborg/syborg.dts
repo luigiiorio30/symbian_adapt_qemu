@@ -12,7 +12,7 @@
     };
     memory@0 {
         device_type = "memory";
-        reg = <0 08000000>;
+        reg = <0 20000000>;
     };
     syborg {
         #address-cells = <1>;
@@ -50,7 +50,7 @@
         };
         framebuffer@0 {
             compatible = "syborg,framebuffer";
-	    width = <168>;
+	    width = <300>;
             height = <280>;
             reg = <c0005000>;
             interrupts = <4>;
@@ -92,7 +92,7 @@
             compatible = "syborg,hostfs";
             reg = <c000a000>;
 	    host-path = "\\svphostfs\\";
-	    drive-number = <d#19>;
+	    drive-number = <d#5>;
         };
         ss@0 {
             compatible = "syborg,snapshot";
