@@ -24,8 +24,10 @@ primary[VARID]=		\epoc32\release\##KMAIN##\##BUILD##\_##VARIANT##_EKERN.EXE		\sy
 extension[VARID]=	\epoc32\release\##KMAIN##\##BUILD##\_##VARIANT##_BTRACEX.LDD		\sys\bin\BTRACEX.LDD
 variant[VARID]=		\epoc32\release\##KMAIN##\##BUILD##\_##VARIANT##_KASYBORG.DLL		\sys\bin\KASYBORG.DLL
 
+#ifndef GCCE
 // IEEE-mode VFP support
 extension[VARID]=	\epoc32\release\##KMAIN##\##BUILD##\EVFP.DLL				\sys\bin\EVFP.DLL
+#endif
 
 // Common monitor support. Must be before both interactive debugger and automatic logger.
 extension[VARID]=   	\Epoc32\release\##KMAIN##\##BUILD##\_##VARIANT##_EXMONCOMMON.DLL 	\sys\bin\EXMONCOMMON.DLL

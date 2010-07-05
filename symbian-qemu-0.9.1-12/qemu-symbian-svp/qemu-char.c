@@ -615,7 +615,7 @@ static CharDriverState *qemu_chr_open_tempfile_out(const char *temp_file)
 {
     CharDriverState *ret = NULL;
     const char *temp_format = "/tmp/%s";
-    char *fname = qemu_mallocz(sizeof(char) * (strlen(temp_path) + strlen(temp_file)));
+    char *fname = qemu_mallocz(sizeof(char) * (strlen(temp_format) + strlen(temp_file)));
     if (fname)
     {
         sprintf(fname, temp_format, temp_file);

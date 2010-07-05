@@ -99,9 +99,10 @@ macro __SYBORG__
 //macro __CPU_ARM1136_ERRATUM_411920_FIXED
 
 
-
+#ifndef GCCE
 macro __CPU_HAS_VFP
 #define USE_VFP_MATH
+#endif
 // !@! not moving when 1136
 //#define MM_MOVING
 macro __DEBUGGER_SUPPORT__
