@@ -104,7 +104,7 @@ extension[VARID]=	KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_ekeyb.dll		\sys\bin\ekeyb.
 //device[VARID]	=KERNEL_DIR\DEBUG_DIR\pipelib.ldd					    \sys\bin\pipelib.ldd
 
 /* Generic nonvolatile memory */
-extension[VARID]=	KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_mednvmemory		\sys\bin\mednvmemory.pdd
+extension[VARID]=	KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_mednvmemory.pdd		\sys\bin\mednvmemory.pdd
 
 // Host Filesystem
 extension[VARID]=	KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_svphostfsdriver.ldd sys\bin\svphostfsdriver.ldd
