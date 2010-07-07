@@ -65,10 +65,8 @@ extension[VARID]=	KERNEL_DIR\DEBUG_DIR\kdebug.dll			        \sys\bin\kdebug.dll
 #include "..\include\trk.iby"
 #endif
 
-#ifndef GCCE
 // IEEE-mode VFP support
-extension[VARID]=	KERNEL_DIR\DEBUG_DIR\evfp.dll			        \sys\bin\evfp.dll
-#endif
+//extension[VARID]=	KERNEL_DIR\DEBUG_DIR\evfp.dll			        \sys\bin\evfp.dll
 
 
 // Either include NGA or Non NGA Framebuffer
