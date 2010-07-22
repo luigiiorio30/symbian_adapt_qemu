@@ -34,7 +34,7 @@ extension[VARID]=	\epoc32\release\##KMAIN##\##BUILD##\_##VARIANT##_EXMONDEBUG.DL
 extension[VARID]=	\epoc32\release\##KMAIN##\##BUILD##\KDEBUG.DLL				\sys\bin\KDEBUG.DLL
 
 extension[VARID]=	\epoc32\release\##KMAIN##\##BUILD##\_##VARIANT##_LCD.DLL		\sys\bin\LCD.DLL
-device[VARID]=		\epoc32\release\##KMAIN##\##BUILD##\_##VARIANT##_ESERIAL.PDD    	\sys\bin\ESERIAL.PDD
+device[VARID]=		\epoc32\release\##KMAIN##\##BUILD##\_##VARIANT##_ESERIAL.PDD    	\sys\bin\EUART1.PDD
 extension[VARID]=	\epoc32\release\##KMAIN##\##BUILD##\ELOCD.LDD				\sys\bin\ELOCD.LDD
 
 extension[VARID]=	\epoc32\release\##KMAIN##\##BUILD##\_##VARIANT##_EPOINTER.DLL		\sys\bin\EPOINTER.DLL
@@ -67,6 +67,9 @@ file=			\epoc32\release\##KMAIN##\##BUILD##\snapapp.exe			\sys\bin\snapapp.exe
 device[VARID]=		\epoc32\release\##KMAIN##\##BUILD##\_##VARIANT##_webcamera.PDD    	\sys\bin\webcamera.PDD
 device[VARID]=		\epoc32\release\##KMAIN##\##BUILD##\_##VARIANT##_ewebcamera.LDD    	\sys\bin\ewebcamera.LDD
 file=			\epoc32\release\##KMAIN##\##BUILD##\webcamera_app.exe			\sys\bin\webcamera_app.exe
+
+/* Generic nonvolatile memory */
+extension[VARID]=	\epoc32\release\##KMAIN##\##BUILD##\_##VARIANT##_MEDNVMEMORY.PDD	    	\sys\bin\MEDNVMEMORY.PDD
 
 // Estart
 data=               	\epoc32\rom\syborg\ESTART.TXT					    \sys\data\ESTART.TXT

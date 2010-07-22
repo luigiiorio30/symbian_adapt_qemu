@@ -95,6 +95,9 @@ webcamera/webcamera_pdd
 webcamera/webcamera_ldd
 webcamera/webcamera_app
 
+//Non volatile memory device
+mednvmemory\mednvmemory
+
 PRJ_EXTENSIONS
 start		extension		base/config
 option		PREFIX			_syborg_

@@ -2,6 +2,8 @@
 *
 * Contributors:
 * NTT DOCOMO, INC. -- Syborg QEMU crashes when using skin + touchscreen device
+* 
+* Nokia Oyj -- New memregion service added for converting guest OS addresses to host OS addresses
 *
 */
 
@@ -133,6 +135,127 @@ static PyTypeObject qemu_py_ioregionType = {
     (initproc)qemu_py_ioregion_init,      /* tp_init */
     0,                                    /* tp_alloc */
     0,                                    /* tp_new */
+};
+
+typedef struct {
+    PyObject_HEAD
+    uint32_t base;
+    uint32_t size;
+	uint32_t *host_ram_base_ptr;
+} qemu_py_memregion;
+
+static void qemu_py_memregion_dealloc(qemu_py_ioregion *self)
+	{
+    self->ob_type->tp_free((PyObject*)self);
+	}
+
+static int qemu_py_memregion_init(qemu_py_memregion *self, PyObject *args,
+                                 PyObject *kwds)
+	{
+    static char *kwlist[] = {"base","size", NULL};
+    uint32_t base;
+    uint32_t size;
+	int ret = -1;
+	int region_index = 0;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "ll", kwlist,
+                                     &base, &size ))
+		{
+        ret = -1; 
+		}
+	else
+		{
+		for( region_index = 0; region_index < devtree_ram_map_size; region_index+=1 )
+			{
+			// The created region needs to fit inside memory regions in device tree configuration
+			if( (devtree_ram_map[region_index].base <= base) && 
+				((devtree_ram_map[region_index].base + devtree_ram_map[region_index].size) >=
+				(base + size)) )
+				{
+				ret = 0;
+				self->base = base;
+				self->size = size;
+				self->host_ram_base_ptr = (uint32_t*)host_ram_addr(base);
+				break;
+				}
+			else
+				{
+				ret = -1;
+				}
+			}
+		}
+	
+    return ret;
+	}
+
+static PyObject *qemu_py_memregion_get_size(qemu_py_memregion *self,
+                                    PyObject *args, PyObject *kwds)
+	{
+	return PyLong_FromUnsignedLong(self->size);
+	}
+
+static PyObject *qemu_py_memregion_get_base(qemu_py_memregion *self,
+                                    PyObject *args, PyObject *kwds)
+	{
+	return PyLong_FromUnsignedLong(self->base);
+	}
+
+static PyObject *qemu_py_memregion_get_host_base(qemu_py_memregion *self,
+                                    PyObject *args, PyObject *kwds)
+	{
+	return PyLong_FromVoidPtr( (void*)(self->host_ram_base_ptr) );
+	}
+
+static PyMethodDef qemu_py_memregion_methods[] = {
+    {"size", (PyCFunction)qemu_py_memregion_get_size, METH_VARARGS|METH_KEYWORDS,
+     "Get memory region size"},
+    {"region_guest_addr", (PyCFunction)qemu_py_memregion_get_base, METH_VARARGS|METH_KEYWORDS,
+     "Get memory region base"},
+    {"region_host_addr", (PyCFunction)qemu_py_memregion_get_host_base, METH_VARARGS|METH_KEYWORDS,
+     "Get memory region host base address"},
+    {NULL}  /* Sentinel */
+};
+
+static PyTypeObject qemu_py_memRegionType = {
+    PyObject_HEAD_INIT(NULL)
+    0,                                      /* ob_size */
+    "qemu.memregion",                       /* tp_name */
+    sizeof(qemu_py_memregion),              /* tp_basicsize */
+    0,                                      /* tp_itemsize */
+    (destructor)qemu_py_memregion_dealloc,  /* tp_dealloc */
+    0,                                      /* tp_print */
+    0,                                      /* tp_getattr */
+    0,                                      /* tp_setattr */
+    0,                                      /* tp_compare */
+    0,                                      /* tp_repr */
+    0,                                      /* tp_as_number */
+    0,                                      /* tp_as_sequence */
+    0,                                      /* tp_as_mapping */
+    0,                                      /* tp_hash  */
+    0,                                      /* tp_call */
+    0,                                      /* tp_str */
+    0,                                      /* tp_getattro */
+    0,                                      /* tp_setattro */
+    0,                                      /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT,                     /* tp_flags */
+    "QEMU MemRegion",                       /* tp_doc */
+    0,                                      /* tp_traverse */
+    0,                                      /* tp_clear */
+    0,		                                /* tp_richcompare */
+    0,		                                /* tp_weaklistoffset */
+    0,		                                /* tp_iter */
+    0,		                                /* tp_iternext */
+    qemu_py_memregion_methods,              /* tp_methods */
+    0,                                      /* tp_members */
+    0,                                      /* tp_getset */
+    0,                                      /* tp_base */
+    0,                                      /* tp_dict */
+    0,                                      /* tp_descr_get */
+    0,                                      /* tp_descr_set */
+    0,                                      /* tp_dictoffset */
+    (initproc)qemu_py_memregion_init,       /* tp_init */
+    0,                                      /* tp_alloc */
+    0,                                      /* tp_new */
 };
 
 typedef struct {
@@ -1929,6 +2052,7 @@ static void qemu_py_init_interface(void)
     qemu_py_add_class(m, "palette", &qemu_py_paletteType);
     qemu_py_add_class(m, "ptimer", &qemu_py_ptimerType);
     qemu_py_add_class(m, "file", &qemu_py_fileType);
+    qemu_py_add_class(m, "memregion", &qemu_py_memRegionType);
 }
 
 #define PLUGIN_INIT_SCRIPT "import sys\nsys.path.insert(0, \"%s/plugins\")"
