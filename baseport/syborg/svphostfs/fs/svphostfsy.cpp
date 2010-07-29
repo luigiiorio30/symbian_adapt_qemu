@@ -131,9 +131,14 @@ void CSVPHostFileSystem::DriveInfo(TDriveInfo& anInfo,TInt aDriveNumber) const
 	{
 	DP(_L("** (SVPHOSTFSY) CSVPHostFileSystem::DriveInfo()"));
 
-	/* !@! TODO: are these the best values? */
 	anInfo.iMediaAtt=KMediaAttVariableSize;
-	anInfo.iType=EMediaRam;
+//  SF BUG 1313 - T_FSYS fails - start
+// Media type changed from RAM drive to Hard Disk - HOSTFS cannot use FAT file system so various
+// tests fail, but T_FSYS fails on any drive as all available drives are exercised by the test.
+// EMediaHardDisk is more appropriate.
+	anInfo.iType=EMediaHardDisk;  // was EMediaRam;
+// SF BUG 1312 - T_FSYS fails - end	
+
 #if 0
 	// !@! can't execute from remote drives
 	anInfo.iDriveAtt=KDriveAttRemote;
