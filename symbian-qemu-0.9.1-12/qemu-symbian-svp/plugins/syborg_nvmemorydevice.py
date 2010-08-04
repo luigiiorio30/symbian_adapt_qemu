@@ -28,6 +28,8 @@ import qemu
 import sys
 import os
 import array
+import platform
+import re
 
 class syborg_nvmemorydevice(qemu.devclass):
     # 256 MB default empty drive size if there is no readymade image available
@@ -66,6 +68,7 @@ class syborg_nvmemorydevice(qemu.devclass):
     drive_size                          = 0
     sector_size                         = 0
     drive_image_name                    = ""
+    host_plat = platform.platform();
 
     def create(self):
         print "syborg_nvmemorydevice: create\n"
@@ -79,15 +82,24 @@ class syborg_nvmemorydevice(qemu.devclass):
         print "sector size: ", self.sector_size
         print "drive name: ", self.drive_image_name
 
-        drive_path_and_name = self.DRIVE_PATH + "\\" + self.drive_image_name 
+        drive_path_and_name = os.path.join(self.DRIVE_PATH, self.drive_image_name)  
         # Save working directory
         self.working_dir = os.getcwd()
+        nvmem_lib = ""
+        open_mode = 0
+        if re.match('^linux',self.host_plat,re.I):
+			nvmemlib_name = "libnvmemmory.so"
+			open_mode = os.O_RDWR
+        else:
+			nvmemlib_name = "nvmemmory.dll"
+			open_mode = os.O_RDWR|os.O_BINARY			
         
         # Open the nvmemory library
         try:
-            self.nvmemlib = ctypes.CDLL("nvmemmory.dll")
-        except:
-            sys.exit("syborg_nvmemorydevice: nvmemmory.dll load failed")
+            self.nvmemlib = ctypes.CDLL(nvmemlib_name)
+        except Exception, e:
+            print repr(e)
+            sys.exit("syborg_nvmemorydevice: nvmemmory load failed")
         
         # Create an instance of non volatile memory handler class
         self.obj = self.nvmemlib.nvmem_create( self.sector_size )
@@ -101,7 +113,7 @@ class syborg_nvmemorydevice(qemu.devclass):
             # Here we could check why we failed - usually because the path already exists \n"
             pass
         try:
-            self.filehandle = os.open( drive_path_and_name, os.O_RDWR|os.O_BINARY )
+            self.filehandle = os.open( drive_path_and_name, open_mode )
             os.close( self.filehandle )
         except:
             print "syborg_nvmemorydevice: drive image not found - create\n"
@@ -119,7 +131,7 @@ class syborg_nvmemorydevice(qemu.devclass):
                 index = index+1
         
         # Create path and get handle to the raw memory array
-        imagepath = self.working_dir + "\\" + drive_path_and_name
+        imagepath = os.path.join(self.working_dir, drive_path_and_name)
         print "imagepath: ", imagepath
         self.nvmemhandle = self.nvmemlib.nvmem_open( self.obj, imagepath )
         if( self.nvmemhandle < 0 ):
