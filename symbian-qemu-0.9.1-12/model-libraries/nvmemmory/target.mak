@@ -46,6 +46,7 @@ clean:
 install: $(targ)
 	if [ ! -d "$(DESTDIR)$(libdir)" ]; then mkdir -p "$(DESTDIR)$(libdir)"; fi && \
 	$(INSTALL) -m 755 $(targ) "$(DESTDIR)$(libdir)" && \
+	rm -f "$(DESTDIR)$(libdir)/$(libname)" && \
 	ln -s "$(DESTDIR)$(libdir)/$(targ)" "$(DESTDIR)$(libdir)/$(libname)"
 
 distclean: clean
