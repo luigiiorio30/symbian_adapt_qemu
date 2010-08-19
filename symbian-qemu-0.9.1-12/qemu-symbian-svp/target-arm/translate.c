@@ -3289,7 +3289,10 @@ static int disas_vfp_insn(CPUState * env, DisasContext *s, uint32_t insn)
         break;
     case 0xc:
     case 0xd:
-        if (dp && (insn & 0x03e00000) == 0x00400000) {
+// SF Bug 1284 - QEMU has faulty instruction emulation for VMOV (between two ARM core registers and two single-precision registers) - start
+//      if (dp && (insn & 0x03e00000) == 0x00400000) {
+        if ((insn & 0x03e00e00) == 0x00400a00) {
+// SF Bug 1284 - QEMU has faulty instruction emulation for VMOV (between two ARM core registers and two single-precision registers) - end
             /* two-register transfer */
             rn = (insn >> 16) & 0xf;
             rd = (insn >> 12) & 0xf;
