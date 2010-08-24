@@ -106,6 +106,10 @@ extension[VARID]=	KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_ekeyb.dll		\sys\bin\ekeyb.
 /* Generic nonvolatile memory */
 extension[VARID]=	KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_mednvmemory.pdd		\sys\bin\mednvmemory.pdd
 
+/* Ethernet drivers */
+device[VARID]=KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_ethernet.pdd		\sys\bin\ethernet.pdd
+device[VARID]=KERNEL_DIR\DEBUG_DIR\enet.ldd							\sys\bin\enet.ldd
+
 // Host Filesystem
 extension[VARID]=	KERNEL_DIR\DEBUG_DIR\_PLATFORM_NAME_svphostfsdriver.ldd sys\bin\svphostfsdriver.ldd
 file=			KERNEL_DIR\DEBUG_DIR\svphostfsy.fsy			sys\bin\svphostfsy.fsy

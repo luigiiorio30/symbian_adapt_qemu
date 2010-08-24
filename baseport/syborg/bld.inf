@@ -96,7 +96,10 @@ webcamera/webcamera_ldd
 webcamera/webcamera_app
 
 //Non volatile memory device
-mednvmemory\mednvmemory
+mednvmemory/mednvmemory
+
+// Ethernet
+ethernet/pdd/enet
 
 PRJ_EXTENSIONS
 start		extension		base/config
