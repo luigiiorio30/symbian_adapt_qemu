@@ -11,6 +11,7 @@
 *
 * Contributors:
 * NTT Docomo, Inc : BUG 1296
+* NTT DOCOMO, INC - Fix for bug 1292 "E32test t_mstim.exe failed to load test LDD"
 *
 * Description: implementation of class Syborg
 *
@@ -81,7 +82,10 @@ TInt Syborg::VariantHal(TInt aFunction, TAny* a1, TAny* a2)
 			TVariantInfoV01& info = infoBuf();
 			TUint clock=0;
 			info.iRomVersion = Epoc::RomHeader().iVersion;
-    		info.iMachineUniqueId = (TInt64(HALData::EMachineUid_OmapH4)<<32);
+// NTT Docomo - Defect 1292 fix - E32test t_mstim.exe failed to load test LDD - start
+			const TInt KMachineUid_Syborg = 0x10005152;
+    		info.iMachineUniqueId = (TInt64(KMachineUid_Syborg)<<32);
+// NTT Docomo - Defect 1292 fix - E32test t_mstim.exe failed to load test LDD - end
    			info.iLedCapabilities = (8<<16) + KLedMaskGreen1;
 			info.iProcessorClockInKHz = clock;
 			info.iSpeedFactor = clock/25;
