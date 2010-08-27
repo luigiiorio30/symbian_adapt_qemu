@@ -11,6 +11,7 @@
 *
 * Contributors:
 * NTT Docomo, Inc : BUG 1296
+* NTT DOCOMO, INC - Fix for bug 1291 "E32test t_tock.exe failed to load Logical Device"
 *
 * Description:
 *
@@ -54,7 +55,11 @@ const TUint KHwSVPNandDevice			= KHwBasePeripherals + 0x0d*KHwLinSeparation;
 const TUint KHwSVPAudioDevice			= KHwBasePeripherals + 0x0e*KHwLinSeparation;
 const TUint KHwSVPWebcameraDevice		= KHwBasePeripherals + 0x0f*KHwLinSeparation;
 const TUint KHwNVMemoryDevice			= KHwBasePeripherals + 0x10*KHwLinSeparation;
-const TUint KHwSVPPlatformDevice		= KHwBasePeripherals + 0x11*KHwLinSeparation;
+// NTT Docomo - Defect 1291 fix - E32test t_tock.exe failed to load Logical Device - start
+//const TUint KHwSVPPlatformDevice		= KHwBasePeripherals + 0x12*KHwLinSeparation;
+const TUint KHwBaseCounterTimer2		= KHwBasePeripherals + 0x12*KHwLinSeparation;
+const TUint KHwSVPPlatformDevice		= KHwBasePeripherals + 0x13*KHwLinSeparation;
+// NTT Docomo - Defect 1291 fix - E32test t_tock.exe failed to load Logical Device - end
 	
 enum TSyborgInterruptId
 {
@@ -70,7 +75,10 @@ enum TSyborgInterruptId
   EIntSerial3 = 8,
   EIntNet0 = 9,
   EIntAudio0 = 10,
-  EIntNVMemoryDevice = 12
+  EIntNVMemoryDevice = 12,
+// NTT Docomo - Defect 1291 fix - E32test t_tock.exe failed to load Logical Device - start
+  EIntTimer2 = 14
+// NTT Docomo - Defect 1291 fix - E32test t_tock.exe failed to load Logical Device - end
 };
 
 // Timer Mode

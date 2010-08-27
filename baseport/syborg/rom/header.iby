@@ -10,6 +10,7 @@
 * Nokia Corporation - initial contribution.
 *
 * Contributors:
+* NTT DOCOMO, INC - Fix for bug 1291 "E32test t_tock.exe failed to load Logical Device"
 *
 * Description:
 *
@@ -55,4 +56,7 @@ nowrapper				// no rom header
 unicode
 #endif
 
-#define VARIANT_PATH syborg
+// NTT Docomo - Defect 1291 fix - E32test t_tock.exe failed to load Logical Device - start
+#define VARIANT_PATH_OUTSIDE_SF_OS
+#define VARIANT_PATH sf\adaptation\qemu\baseport\syborg
+// NTT Docomo - Defect 1291 fix - E32test t_tock.exe failed to load Logical Device - end
