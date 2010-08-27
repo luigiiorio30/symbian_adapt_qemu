@@ -9,7 +9,16 @@ EDeviceFamilyRev=0
 ECPU=0
 ECPUArch=0
 ECPUABI=0
-ECPUSpeed = GetCPUSpeed
+
+
+// NTT Docomo - Defect 1290 fix - E32test t_atomic.EXE failed with unhandled exception handling - start
+//
+// NTT DOCOMO, INC - Fix for bug 1290 "E32test t_atomic.EXE failed with unhandled exception handling"
+// Mark as not supported (comment-out), because it doesn't make sense on a non cycle-accurate simulator platform...
+// ECPUSpeed = GetCPUSpeed
+//
+// NTT Docomo - Defect 1290 fix - E32test t_atomic.EXE failed with unhandled exception handling - End
+
 ESystemStartupReason = GetSystemStartupReason
 ESystemException = GetSystemException
 ESystemTickPeriod=0
