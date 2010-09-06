@@ -2291,7 +2291,7 @@ int gdbserver_start(const char *port)
     if (*p == 0) {
         /* A numeric value is interpreted as a port number.  */
         snprintf(gdbstub_port_name, sizeof(gdbstub_port_name),
-                 "tcp::%d,nowait,nodelay,server", port_num);
+                 "tcp:127.0.0.1:%d,nowait,nodelay,server", port_num);
         port = gdbstub_port_name;
     }
 
