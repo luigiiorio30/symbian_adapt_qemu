@@ -1,6 +1,8 @@
 #ifndef PLATFORMTYPES_H
 #define PLATFORMTYPES_H
-
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#else
 // TODO: We should have a proper type definition file created common for standalone model libraries
 typedef signed __int8         int8_t;
 typedef signed __int16        int16_t;
@@ -15,5 +17,7 @@ typedef unsigned __int32    u_int32_t;
 typedef unsigned __int64    uint64_t;
 typedef unsigned __int64    u_int64_t;
 typedef unsigned char byte_t;
+#endif
+
 
 #endif // PLATFORMTYPES_H

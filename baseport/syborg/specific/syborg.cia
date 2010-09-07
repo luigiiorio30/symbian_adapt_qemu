@@ -71,5 +71,5 @@ EXPORT_C void __NAKED__ TSyborg::DisableInt(TUint /*anId*/)
   asm("bx lr");
 	
 	asm("__KHwInt:");
-	asm(".word %a0" : : "i" (TInt)(KHwBaseSic));
+	asm(".word %a0" : : "i" ((TInt)(KHwBaseSic)));
 }

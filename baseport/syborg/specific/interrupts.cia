@@ -86,7 +86,7 @@ __NAKED__ void SyborgInterrupt::IrqDispatch()
 	asm("__KHwBaseSic:");
 	asm(".word %a0" : : "i" ((TInt)KHwBaseSic));
 	asm("__SicHandlerStart:");
-	asm(".word %a0" : : "i" ((TInt)&Handlers[0]));
+	asm(".word %a0" : : "i" (&Handlers[0]));
 }
 
 __NAKED__ void SyborgInterrupt::FiqDispatch()

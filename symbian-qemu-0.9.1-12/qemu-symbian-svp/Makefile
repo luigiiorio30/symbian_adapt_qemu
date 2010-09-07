@@ -3,7 +3,7 @@
 include config-host.mak
 
 .PHONY: all clean cscope distclean dvi html info install install-doc \
-	recurse-all speed tar tarbin test
+	recurse-all model-libs speed tar tarbin test
 
 VPATH=$(SRC_PATH):$(SRC_PATH)/hw:$(SRC_PATH)/libfdt
 
@@ -32,7 +32,15 @@ ifdef CONFIG_WIN32
 LIBS+=-lwinmm -lws2_32 -liphlpapi
 endif
 
-all: $(TOOLS) $(DOCS) recurse-all
+all:: $(TOOLS) $(DOCS) recurse-all
+
+ifneq ($(MODEL_LIBS_DIR),)
+all:: model-libs
+
+model-libs:
+	$(MAKE) -C $(MODEL_LIBS_DIR) all
+endif
+
 
 SUBDIR_RULES=$(patsubst %,subdir-%, $(TARGET_DIRS))
 
@@ -203,6 +211,9 @@ qemu-nbd$(EXESUF):  qemu-nbd.o qemu-tool.o osdep.o $(BLOCK_OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^ -lz $(LIBS)
 
 clean:
+ifneq ($(MODEL_LIBS_DIR),)
+	$(MAKE) -C $(MODEL_LIBS_DIR) $@
+endif
 # avoid old build problems by removing potentially incorrect old files
 	rm -f config.mak config.h op-i386.h opc-i386.h gen-op-i386.h op-arm.h opc-arm.h gen-op-arm.h
 	rm -f *.o *.d *.a $(TOOLS) TAGS cscope.* *.pod *~ */*~
@@ -213,6 +224,9 @@ clean:
         done
 
 distclean: clean
+ifneq ($(MODEL_LIBS_DIR),)
+	$(MAKE) -C $(MODEL_LIBS_DIR) $@
+endif
 	rm -f config-host.mak config-host.h $(DOCS)
 	rm -f qemu-{doc,tech}.{info,aux,cp,dvi,fn,info,ky,log,pg,toc,tp,vr}
 	for d in $(TARGET_DIRS); do \
@@ -261,6 +275,10 @@ endif
 	for d in $(TARGET_DIRS); do \
 	$(MAKE) -C $$d $@ || exit 1 ; \
         done
+ifneq ($(MODEL_LIBS_DIR),)
+	$(MAKE) -C $(MODEL_LIBS_DIR) $@
+endif
+
 
 # various test targets
 test speed: all

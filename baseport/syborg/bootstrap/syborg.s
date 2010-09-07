@@ -487,7 +487,7 @@ InitDebugPort	ROUT
 GetDebugPortBase	ROUT
 		ldr		r1, [r12, #TRomHeader_iDebugPort]
 		cmp		r1, #42							; JTAG?
-		movseq	r1, #0
+		moveqs	r1, #0
 		bxeq	lr							    ; yes - return 0 and set Z
 		cmp		r1, #1
         blo     GetUartPort0          
