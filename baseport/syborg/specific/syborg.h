@@ -10,7 +10,8 @@
 * Nokia Corporation - initial contribution.
 *
 * Contributors:
-* NTT Docomo, Inc : BUG 1296
+* NTT DOCOMO, INC : BUG 1296
+* NTT DOCOMO, INC : BUG 3598
 * NTT DOCOMO, INC - Fix for bug 1291 "E32test t_tock.exe failed to load Logical Device"
 *
 * Description:
@@ -133,12 +134,12 @@ public:
 	IMPORT_C static void MarkDebugPortOff();
 };
 
-static inline TUint32 ReadReg(TUint32 base, TUint8 aReg)
+static inline TUint32 ReadReg(TUint32 base, TUint32 aReg)
 {
   return *(volatile TUint32 *)(base + (aReg << 2));
 }
 
-static inline void WriteReg(TUint32 base, TUint8 aReg, TUint32 aVal)
+static inline void WriteReg(TUint32 base, TUint32 aReg, TUint32 aVal)
 {
   *(volatile TUint32*)(base + (aReg<<2)) = aVal;
 }
