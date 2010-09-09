@@ -21,7 +21,7 @@ targ := $(soname).0
  
 .phony: all build clean install distclean uninstall
 
-cflags=-DHAVE_STDINT_H
+cflags=-DHAVE_STDINT_H -DNVMEMORY_EXPORTS
 ifneq ($(DEBUG_LIBS),)
 cflags+="-O0 -g"
 else
