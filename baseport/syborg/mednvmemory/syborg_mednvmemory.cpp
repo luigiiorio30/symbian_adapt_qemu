@@ -11,7 +11,10 @@
 *
 * Contributors:
 *
-* Description: Minimalistic non volatile memory driver
+* NTT DOCOMO, INC - SF Bugzilla Defect ID:3759 Fix -  NVM drives do not 
+* support operations larger than 262144 bytes correctly
+*
+* Description: Minimalistic non volatile memory driver.
 *
 */
 
@@ -80,6 +83,10 @@ private:
 	TUint32 iHead;
 	TUint32 iTail;
 	TUint32 iSplitted;
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - start
+	Int64 iSplitLength;   // New variable for split operations
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - end
+
 	TUint32 iAlignmentOverhead;
 	TBool iReadModifyWrite;
 	TDfc iTransactionLaunchDfc;
@@ -252,6 +259,11 @@ TInt DMediaDriverNVMemory::Request(TLocDrvRequest& m)
 
 		iCurrentRequest=&m;
 		iProsessedLength = 0;
+
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - start
+		iSplitLength = 0; // New variable for split operation housekeeping
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - end
+
 		iHead = 0;
 		iTail = 0;
 		iSplitted = 0;
@@ -456,7 +468,10 @@ TInt DMediaDriverNVMemory::Write()
 			{
 			// Read from client
 			TPtr8 targetDescriptor(iTransferBufferLin, transactionLength);
-			r = iCurrentRequest->ReadRemote(&targetDescriptor,0);
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - start
+			r = iCurrentRequest->ReadRemote(&targetDescriptor,iSplitLength);
+			iSplitLength+= transactionLength;
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - end
 			}
 		}
 	
@@ -585,7 +600,9 @@ void DMediaDriverNVMemory::DoSessionEndDfc()
 				// We have a sector here here filled with data from mass memory. Modify with client data.
 				__DEBUG_PRINT("DMediaDriverNVMemory::DoSessionEndDfc() readremote splitted: %d head: %d", latestTransferSize, iHead );
 				TPtr8 targetDescriptor(&iTransferBufferLin[iHead], KNVMemTransferBufferSize - iHead);
-				r = iCurrentRequest->ReadRemote(&targetDescriptor,0);
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - start
+				r = iCurrentRequest->ReadRemote(&targetDescriptor,iSplitLength); 
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - end
 				}
 			// Else we need to take care of both head and tail
 			else
@@ -593,10 +610,16 @@ void DMediaDriverNVMemory::DoSessionEndDfc()
 				// We have a piece of data read from mass memory. Modify with client data.
 				__DEBUG_PRINT("DMediaDriverNVMemory::DoSessionEndDfc() readremote: %d head: %d", I64LOW(iTotalLength - iProsessedLength), iHead );
 				TPtr8 targetDescriptor(&iTransferBufferLin[iHead], I64LOW(iTotalLength - iProsessedLength));
-				r = iCurrentRequest->ReadRemote(&targetDescriptor,0);
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - start
+				r = iCurrentRequest->ReadRemote(&targetDescriptor,iSplitLength);
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - end
+
 //				latestTransferSize -= (KDiskSectorSize - iTail);
 				iTail = 0;
 				}
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - start
+			iSplitLength+= latestTransferSize; // Update split transfer position count
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - end
 			}
 		else
 			{
@@ -667,7 +690,11 @@ void DMediaDriverNVMemory::DoSessionEndDfc()
 				// Write to client
 				__DEBUG_PRINT("DMediaDriverNVMemory::DoSessionEndDfc() WriteRemote: %d head: %d", latestTransferSize, iHead );
 				TPtrC8 sourceDescriptor(&iTransferBufferLin[iHead], latestTransferSize);
-				r = iCurrentRequest->WriteRemote( &sourceDescriptor, 0 );
+
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - start
+				r = iCurrentRequest->WriteRemote( &sourceDescriptor, iSplitLength ); // Allow for "splitted" operations
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - end
+
 				}
 			// Head is processed
 			iHead = 0;
@@ -683,9 +710,16 @@ void DMediaDriverNVMemory::DoSessionEndDfc()
 					// Prepare a buffer for transfer
 					__DEBUG_PRINT("DMediaDriverNVMemory::DoSessionEndDfc() ReadRemote: %d head: %d", latestTransferSize, iHead );
 					TPtr8 targetDescriptor(iTransferBufferLin, transactionLength);
-					r = iCurrentRequest->ReadRemote(&targetDescriptor,0);
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - start
+					r = iCurrentRequest->ReadRemote(&targetDescriptor,iSplitLength); // allow for "splitted" operations
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - end
 					}
 				}
+
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - start
+			iSplitLength+= latestTransferSize; // Update split transfer position count
+//  SF BUG 3759 - NVM drives do not support operations larger than 262144 bytes correctly - end
+			
 			if( request == DLocalDrive::EFormat )
 				{
 				transactionDirection = NVMEM_TRANSACTION_WRITE;
