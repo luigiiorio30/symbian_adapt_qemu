@@ -32,6 +32,13 @@ trk_l1.ini						/epoc32/data/Z/trk/trk_syborg.ini
 webcamera/webcamera_driver.h				/epoc32/include/syborg/
 webcamera/webcamera_driver.inl				/epoc32/include/syborg/
 specific/variantmediadef.h /epoc32/include/syborg/variantmediadef.h
+//specific/assp.cpp    /epoc32/include/syborg/assp.cpp
+specific/highrestimer.h    /epoc32/include/syborg/highrestimer.h
+//specific/syborg.cpp    /epoc32/include/syborg/syborg.cpp
+specific/syborg.h    /epoc32/include/syborg/syborg.h
+specific/syborg_priv.h    /epoc32/include/syborg/syborg_priv.h
+specific/system.h    /epoc32/include/syborg/system.h
+specific/system_priv.h    /epoc32/include/syborg/system_priv.h
 
 PRJ_EXTENSIONS
 start		extension		base/genexec
