@@ -250,7 +250,10 @@ void CSVPHostMountCB::EntryL(const TDesC& aName,TEntry& anEntry) const
 	anEntry.iAtt=info.iAtt&KEntryAttMaskSupported;
 	anEntry.iSize=info.iSize;
 	fileTimeToTime(info.iModified,anEntry.iModified, info.iTimeType);
-
+	if (anEntry.iSize>=(TInt)sizeof(TCheckedUid))
+		{
+		ReadUidL(aName,anEntry);
+		}
 	}
 
 void timeToFileTime(TUint32& t,const TTime& aTime, TFileTimeType aType);
