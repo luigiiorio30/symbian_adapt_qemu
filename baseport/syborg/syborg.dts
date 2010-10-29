@@ -132,14 +132,14 @@
         };
         timer@1 {
             compatible = "syborg,timer";
-            reg = <c0012000>;
+            reg = <c0011000>;
             frequency = <d#0100000>;
             interrupts = <e>;
             interrupt-parent = <&intc>;
         };
         platform@0 {
             compatible = "syborg,platform";
-            reg = <c0013000>;
+            reg = <c0012000>;
         };
     };
 };

@@ -55,9 +55,9 @@ KHwBaseAudio		EQU     KHwBaseRegisters + 0x0e000
 KHwBaseWebcamera	EQU     KHwBaseRegisters + 0x0f000
 KHwNVMemoryDevice			EQU		KHwBaseRegisters + 0x10000
 ; NTT Docomo - Defect 1291 fix - E32test t_tock.exe failed to load Logical Device - start
-; KHwBasePlatform		EQU     KHwBaseRegisters + 0x12000
-KHwBaseTimer2		EQU	KHwBaseRegisters + 0x12000
-KHwBasePlatform		EQU     KHwBaseRegisters + 0x13000
+
+KHwBaseTimer2		EQU	KHwBaseRegisters + 0x11000
+KHwBasePlatform		EQU     KHwBaseRegisters + 0x12000
 ; NTT Docomo - Defect 1291 fix - E32test t_tock.exe failed to load Logical Device - end
 
 ;-----------------------------------------------------------------------------
@@ -87,9 +87,9 @@ KHwLinBaseAudio		EQU	KHwLinBaseRegisters + 0x0e*KHwLinSeparation
 KHwLinBaseWebcameraDevice	EQU	KHwLinBaseRegisters + 0x0f*KHwLinSeparation
 KHwLinBaseNVMemory	EQU	KHwLinBaseRegisters + 0x10*KHwLinSeparation
 ; NTT Docomo - Defect 1291 fix - E32test t_tock.exe failed to load Logical Device - start
-; KHwLinBasePlatform	EQU	KHwLinBaseRegisters + 0x12*KHwLinSeparation
-KHwLinBaseTimer2		EQU	KHwLinBaseRegisters + 0x12*KHwLinSeparation
-KHwLinBasePlatform	EQU	KHwLinBaseRegisters + 0x13*KHwLinSeparation
+
+KHwLinBaseTimer2		EQU	KHwLinBaseRegisters + 0x11*KHwLinSeparation
+KHwLinBasePlatform	EQU	KHwLinBaseRegisters + 0x12*KHwLinSeparation
 ; NTT Docomo - Defect 1291 fix - E32test t_tock.exe failed to load Logical Device - end
 	
 	END
